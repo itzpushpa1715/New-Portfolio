@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pushpa Koirala — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- EmailJS — sends form submissions to pushpakoirala.work@gmail.com -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function(){
+    // EmailJS public key — sign up at emailjs.com and replace this
+    // After signing up: Services → Add Gmail → Templates → create template
+    // Then paste your Public Key, Service ID, and Template ID below
+    emailjs.init({
+      publicKey: "_ebZTBbAabfJimhrO",
+    });
+  })();
+</script>
 
 <!-- ============================================================
      FIREBASE SETUP — REPLACE THIS BLOCK WITH YOUR OWN CONFIG
@@ -572,10 +584,31 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     </div>
     <div class="fade-up">
       <div class="contact-form-wrap">
-        <div class="form-group"><label>Your name</label><input type="text" placeholder="Jane Smith"></div>
-        <div class="form-group"><label>Your email</label><input type="email" placeholder="jane@company.com"></div>
-        <div class="form-group"><label>Message</label><textarea placeholder="Tell me about the opportunity..."></textarea></div>
-        <a id="contact-mailto-btn" href="#" class="btn-primary" style="text-align:center;">Send message →</a>
+        <div class="form-group">
+          <label>Your name</label>
+          <input type="text" id="form-name" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label>Your email</label>
+          <input type="email" id="form-email" placeholder="jane@company.com">
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="form-subject" placeholder="Job opportunity / Collaboration ...">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="form-message" placeholder="Tell me about the opportunity..." style="min-height:140px;"></textarea>
+        </div>
+        <button type="button" class="btn-primary" id="form-send-btn" onclick="sendEmail()" style="width:100%;text-align:center;font-size:0.85rem;">
+          Send message →
+        </button>
+        <div id="form-success" style="display:none;padding:1.2rem;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.05em;">
+          ✓ Message sent! Pushpa will get back to you soon.
+        </div>
+        <div id="form-error" style="display:none;padding:1.2rem;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--danger);letter-spacing:0.05em;">
+          ⚠ Failed to send. Please email directly: <a href="mailto:pushpakoirala.work@gmail.com" style="color:var(--danger);">pushpakoirala.work@gmail.com</a>
+        </div>
       </div>
     </div>
   </div>
@@ -598,7 +631,7 @@ const DEFAULT_DATA = {
   education:[{year:"2024 — Present",degree:"Bachelor's in Automation and Robotics",school:"JAMK University of Applied Sciences, Finland",credits:"118 / 240 credits completed"},{year:"Prior",degree:"Information Communication Technology",school:"Tribhuwan University, Nepal",credits:"Credits recognized at JAMK"}],
   courses:[{name:"Physics 1 — Force & Motion",grade:"5"},{name:"Physics 2 — Energy",grade:"5"},{name:"Phys 3 — Electromagnetism",grade:"5"},{name:"Basics of Programming",grade:"5"},{name:"Deep Learning",grade:"3"},{name:"Basics of Automation",grade:"3"},{name:"Digital Technology",grade:"3"},{name:"Math 3 — Derivative & Integral",grade:"1"},{name:"Measurement Technology",grade:"2"},{name:"Basics of Control Systems",grade:"2"},{name:"Functional Safety",grade:"1"},{name:"Finnish 1",grade:"1"},{name:"AI & Cybersecurity",grade:"P"},{name:"Robotics (LAB UAS)",grade:"P"},{name:"Cybersecurity Fundamentals",grade:"P"},{name:"Practical Training",grade:"12cr"}],
   certs:[{icon:"🏗️",name:"FrEE: Introduction to Building Automation",issuer:"Metropolia / EU FrEE Project",date:"January 9, 2026",featured:true,sub:"Architecture of BAS · Sensors & Actuators · Field Controllers · Management Level"},{icon:"⚡",name:"Electrical Safety Training SF6000",issuer:"Finnish Standard",date:"",featured:false,sub:""},{icon:"🦺",name:"Occupational Safety Card",issuer:"Finnish Safety",date:"",featured:false,sub:""},{icon:"🏥",name:"Emergency First Aid Training",issuer:"First Aid Certificate",date:"",featured:false,sub:""},{icon:"🐍",name:"Python Programming",issuer:"Programming Certificate",date:"",featured:false,sub:""},{icon:"🔐",name:"AI & Cybersecurity",issuer:"University of Turku",date:"",featured:false,sub:""},{icon:"⛏️",name:"Mine Robotics",issuer:"Robotics Certificate",date:"",featured:false,sub:""},{icon:"🌍",name:"Invent For The Planet",issuer:"Global Innovation",date:"",featured:false,sub:""},{icon:"☁️",name:"Oracle Autonomous Database Cloud 2025",issuer:"Oracle Certified Professional",date:"",featured:false,sub:""}],
-  contact:{heading:"Open to opportunities",desc:"Currently seeking professional training and full-time roles in automation engineering, robotics, or industrial AI. Based in Helsinki, open to Finland and remote opportunities.",email:"thepushpaco@outlook.com",phone:"+358 408 795 424",linkedin:"https://linkedin.com",github:"https://github.com"},
+  contact:{heading:"Open to opportunities",desc:"Currently seeking professional training and full-time roles in automation engineering, robotics, or industrial AI. Based in Helsinki, open to Finland and remote opportunities.",email:"pushpakoirala.work@gmail.com",phone:"+358 408 795 424",linkedin:"https://linkedin.com",github:"https://github.com"},
   settings:{siteTitle:"Pushpa Koirala — Portfolio",footerLeft:"© 2026 Pushpa Koirala — Built with passion",footerRight:"Helsinki, Finland · JAMK University"}
 };
 
@@ -715,7 +748,7 @@ function renderContact(){
   const c=DATA.contact;
   document.getElementById('contact-heading-el').textContent=c.heading;
   document.getElementById('contact-desc-el').textContent=c.desc;
-  document.getElementById('contact-mailto-btn').href='mailto:'+c.email;
+  // mailto handled by sendEmail()
   document.getElementById('contact-links-el').innerHTML=`
     <a href="mailto:${c.email}" class="contact-link"><span>✉️</span><span>${c.email}</span><span class="contact-link-label">Email</span></a>
     <a href="tel:${c.phone}" class="contact-link"><span>📱</span><span>${c.phone}</span><span class="contact-link-label">Phone</span></a>
@@ -936,6 +969,87 @@ function initTilt(){
     card.addEventListener('mouseleave',()=>card.style.transform='');
   });
 }
+
+// ===================== CONTACT FORM =====================
+// EmailJS config — fill these in after creating account at emailjs.com
+const EMAILJS_SERVICE_ID  = "service_contact_Portfoli";
+const EMAILJS_TEMPLATE_ID = "template_5lfq54h";
+const RECIPIENT_EMAIL     = "pushpakoirala.work@gmail.com";
+
+async function sendEmail(){
+  const name    = document.getElementById('form-name').value.trim();
+  const email   = document.getElementById('form-email').value.trim();
+  const subject = document.getElementById('form-subject').value.trim();
+  const message = document.getElementById('form-message').value.trim();
+
+  // Basic validation
+  if(!name || !email || !message){
+    showToast('Please fill in name, email and message.', true);
+    return;
+  }
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRe.test(email)){
+    showToast('Please enter a valid email address.', true);
+    return;
+  }
+
+  const btn = document.getElementById('form-send-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+
+  const templateParams = {
+    from_name:    name,
+    from_email:   email,
+    subject:      subject || 'Portfolio Contact',
+    message:      message,
+    to_email:     RECIPIENT_EMAIL,
+    reply_to:     email,
+  };
+
+  try {
+    // If EmailJS is not configured yet, fall back to mailto
+    if(EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID'){
+      // Fallback: open mailto with prefilled content
+      const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`);
+      const sub  = encodeURIComponent(subject || 'Portfolio Contact');
+      window.location.href = `mailto:${RECIPIENT_EMAIL}?subject=${sub}&body=${body}`;
+      resetForm();
+      return;
+    }
+
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+    document.getElementById('form-success').style.display = 'block';
+    document.getElementById('form-error').style.display   = 'none';
+    document.getElementById('form-name').value    = '';
+    document.getElementById('form-email').value   = '';
+    document.getElementById('form-subject').value = '';
+    document.getElementById('form-message').value = '';
+    showToast('✓ Message sent successfully!');
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    document.getElementById('form-error').style.display   = 'block';
+    document.getElementById('form-success').style.display = 'none';
+    showToast('Failed to send — see fallback link below.', true);
+  } finally {
+    btn.textContent = 'Send message →';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+function resetForm(){
+  document.getElementById('form-name').value    = '';
+  document.getElementById('form-email').value   = '';
+  document.getElementById('form-subject').value = '';
+  document.getElementById('form-message').value = '';
+  document.getElementById('form-success').style.display = 'block';
+  document.getElementById('form-error').style.display   = 'none';
+  document.getElementById('form-send-btn').textContent  = 'Send message →';
+  document.getElementById('form-send-btn').disabled     = false;
+  document.getElementById('form-send-btn').style.opacity = '1';
+}
+
 </script>
 </body>
 </html>
