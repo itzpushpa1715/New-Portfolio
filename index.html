@@ -3,1030 +3,939 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pushpa Koirala — Automation & Electrical Engineering</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Pushpa Koirala — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     FIREBASE SETUP — REPLACE THIS BLOCK WITH YOUR OWN CONFIG
+     Get it from: Firebase Console → Project Settings → Your apps
+     ============================================================ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ✅ Pushpa Koirala — Firebase config (pushpa-portfolio-ab053)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAWidrtot8ASzs5Khc_o9_Eu1xo9Cwj1cg",
+    authDomain: "pushpa-portfolio-ab053.firebaseapp.com",
+    projectId: "pushpa-portfolio-ab053",
+    storageBucket: "pushpa-portfolio-ab053.firebasestorage.app",
+    messagingSenderId: "854511607876",
+    appId: "1:854511607876:web:020bf94542aa94ed9ddc11",
+    measurementId: "G-QKVZHSW851"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Expose to global scope for use in non-module scripts
+  window.__db = db;
+  window.__firestoreDoc = doc;
+  window.__firestoreGet = getDoc;
+  window.__firestoreSet = setDoc;
+
+  // Load data from Firestore on startup
+  window.__loadFromFirestore = async function() {
+    try {
+      const ref = doc(db, "portfolio", "data");
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        return snap.data();
+      }
+      return null;
+    } catch(e) {
+      console.warn("Firestore load failed, using defaults:", e);
+      return null;
+    }
+  };
+
+  // Save data to Firestore
+  window.__saveToFirestore = async function(data) {
+    try {
+      const ref = doc(db, "portfolio", "data");
+      await setDoc(ref, data);
+      return true;
+    } catch(e) {
+      console.error("Firestore save failed:", e);
+      return false;
+    }
+  };
+
+  // Signal that Firebase is ready
+  window.__firebaseReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
 <style>
-  :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --accent: #00d4ff;
-    --accent2: #7c3aed;
-    --accent3: #10b981;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --border: rgba(255,255,255,0.07);
-    --glow: 0 0 40px rgba(0,212,255,0.15);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    line-height: 1.7;
-    overflow-x: hidden;
-  }
-
-  /* ---- BACKGROUND GRID ---- */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ---- NAV ---- */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 20px 60px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    backdrop-filter: blur(20px);
-    background: rgba(10,14,26,0.8);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 1.1rem;
-    letter-spacing: 0.05em;
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  .nav-links { display: flex; gap: 36px; list-style: none; }
-  .nav-links a {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--muted);
-    text-decoration: none;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--accent); }
-
-  /* ---- SECTIONS ---- */
-  section { position: relative; z-index: 1; }
-
-  /* ---- HERO ---- */
-  #hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding: 120px 60px 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    pointer-events: none;
-  }
-  .hero-orb-1 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(0,212,255,0.12), transparent 70%);
-    top: -100px; right: -100px;
-  }
-  .hero-orb-2 {
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, rgba(124,58,237,0.1), transparent 70%);
-    bottom: -50px; left: 30%;
-  }
-
-  .hero-content { max-width: 900px; }
-
-  .hero-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    opacity: 0;
-    animation: fadeUp 0.8s ease 0.1s forwards;
-  }
-  .hero-label::before {
-    content: '';
-    display: inline-block;
-    width: 32px; height: 1px;
-    background: var(--accent);
-  }
-
-  .hero-name {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(3rem, 8vw, 6.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.02em;
-    margin-bottom: 28px;
-    opacity: 0;
-    animation: fadeUp 0.8s ease 0.2s forwards;
-  }
-
-  .hero-name span { color: var(--accent); }
-
-  .hero-tagline {
-    font-size: 1.15rem;
-    color: var(--muted);
-    max-width: 580px;
-    margin-bottom: 48px;
-    font-weight: 300;
-    opacity: 0;
-    animation: fadeUp 0.8s ease 0.35s forwards;
-  }
-
-  .hero-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 52px;
-    opacity: 0;
-    animation: fadeUp 0.8s ease 0.45s forwards;
-  }
-
-  .badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    padding: 6px 14px;
-    border-radius: 4px;
-    border: 1px solid;
-    letter-spacing: 0.05em;
-  }
-  .badge-cyan { color: var(--accent); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
-  .badge-purple { color: #a78bfa; border-color: rgba(124,58,237,0.3); background: rgba(124,58,237,0.05); }
-  .badge-green { color: #34d399; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
-
-  .hero-cta {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 0.8s ease 0.55s forwards;
-  }
-
-  .btn {
-    padding: 14px 32px;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.25s;
-    display: inline-block;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: #0a0e1a;
-    border: 1px solid var(--accent);
-  }
-  .btn-primary:hover {
-    background: transparent;
-    color: var(--accent);
-    box-shadow: 0 0 30px rgba(0,212,255,0.3);
-  }
-  .btn-ghost {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .hero-stats {
-    position: absolute;
-    right: 60px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    opacity: 0;
-    animation: fadeLeft 0.8s ease 0.7s forwards;
-  }
-
-  .stat {
-    text-align: right;
-    border-right: 2px solid var(--border);
-    padding-right: 24px;
-    position: relative;
-  }
-  .stat::after {
-    content: '';
-    position: absolute;
-    right: -4px; top: 50%;
-    transform: translateY(-50%);
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-  }
-
-  /* ---- ABOUT ---- */
-  #about {
-    padding: 120px 60px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .section-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--accent);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    line-height: 1.1;
-    margin-bottom: 24px;
-  }
-
-  .about-text {
-    color: var(--muted);
-    font-weight: 300;
-    margin-bottom: 16px;
-  }
-
-  .about-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    position: relative;
-    overflow: hidden;
-  }
-  .about-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-
-  .cert-grid {
-    display: grid;
-    gap: 12px;
-    margin-top: 20px;
-  }
-
-  .cert-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.88rem;
-    color: var(--text);
-  }
-  .cert-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent3);
-    flex-shrink: 0;
-  }
-
-  /* ---- SKILLS ---- */
-  #skills {
-    padding: 120px 60px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .skills-inner { max-width: 1200px; margin: 0 auto; }
-
-  .skills-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 60px;
-  }
-
-  .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-
-  .skill-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 28px;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-  .skill-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .skill-card:hover {
-    border-color: rgba(0,212,255,0.3);
-    transform: translateY(-4px);
-    box-shadow: var(--glow);
-  }
-  .skill-card:hover::after { opacity: 1; }
-
-  .skill-icon {
-    font-size: 1.8rem;
-    margin-bottom: 16px;
-  }
-
-  .skill-card-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 16px;
-    color: var(--text);
-  }
-
-  .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .skill-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    padding: 4px 10px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--muted);
-    letter-spacing: 0.03em;
-  }
-
-  /* ---- EXPERIENCE ---- */
-  #experience {
-    padding: 120px 60px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .exp-header { margin-bottom: 60px; }
-
-  .timeline { position: relative; padding-left: 32px; }
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 8px; bottom: 8px;
-    width: 1px;
-    background: linear-gradient(180deg, var(--accent), var(--accent2), transparent);
-  }
-
-  .exp-item {
-    position: relative;
-    margin-bottom: 52px;
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: all 0.6s ease;
-  }
-  .exp-item.visible {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .exp-dot {
-    position: absolute;
-    left: -38px; top: 6px;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--bg);
-    box-shadow: 0 0 10px rgba(0,212,255,0.5);
-  }
-
-  .exp-meta {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--accent);
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-  }
-
-  .exp-role {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1.15rem;
-    margin-bottom: 4px;
-  }
-
-  .exp-company {
-    font-size: 0.9rem;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-
-  .exp-desc { color: var(--muted); font-size: 0.9rem; font-weight: 300; }
-  .exp-desc li { margin-bottom: 4px; margin-left: 16px; }
-
-  /* ---- EDUCATION ---- */
-  #education {
-    padding: 120px 60px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-
-  .edu-inner { max-width: 1200px; margin: 0 auto; }
-
-  .edu-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 60px;
-  }
-
-  .edu-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    transition: all 0.3s;
-  }
-  .edu-card:hover {
-    border-color: rgba(124,58,237,0.4);
-    box-shadow: 0 0 40px rgba(124,58,237,0.1);
-    transform: translateY(-4px);
-  }
-
-  .edu-year {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    color: #a78bfa;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-  }
-
-  .edu-degree {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    line-height: 1.3;
-    margin-bottom: 10px;
-  }
-
-  .edu-school {
-    font-size: 0.85rem;
-    color: var(--muted);
-    font-weight: 300;
-  }
-
-  /* ---- LANGUAGES ---- */
-  #languages {
-    padding: 80px 60px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .lang-row {
-    display: flex;
-    gap: 24px;
-    margin-top: 48px;
-    flex-wrap: wrap;
-  }
-
-  .lang-chip {
-    padding: 16px 28px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .lang-flag { font-size: 1.5rem; }
-
-  .lang-name {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-  }
-
-  .lang-level {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-
-  /* ---- CONTACT ---- */
-  #contact {
-    padding: 120px 60px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  #contact::before {
-    content: '';
-    position: absolute;
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,255,0.06), transparent 70%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-
-  .contact-inner { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
-
-  .contact-title {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 800;
-    margin-bottom: 20px;
-  }
-
-  .contact-sub {
-    color: var(--muted);
-    font-weight: 300;
-    margin-bottom: 48px;
-  }
-
-  .contact-links {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .contact-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 24px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--text);
-    font-size: 0.9rem;
-    background: var(--bg);
-    transition: all 0.25s;
-  }
-  .contact-link:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 0 20px rgba(0,212,255,0.15);
-  }
-
-  /* ---- FOOTER ---- */
-  footer {
-    padding: 32px 60px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  /* ---- ANIMATIONS ---- */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeLeft {
-    from { opacity: 0; transform: translateX(24px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* ---- SCROLLBAR ---- */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 2px; }
-
-  /* ---- RESPONSIVE ---- */
-  @media (max-width: 900px) {
-    nav { padding: 16px 24px; }
-    .nav-links { gap: 20px; }
-    #hero { padding: 100px 24px 60px; }
-    .hero-stats { display: none; }
-    #about { grid-template-columns: 1fr; gap: 40px; padding: 80px 24px; }
-    #skills { padding: 80px 24px; }
-    .skills-grid { grid-template-columns: 1fr 1fr; }
-    #experience { padding: 80px 24px; }
-    #education { padding: 80px 24px; }
-    .edu-grid { grid-template-columns: 1fr; }
-    #languages { padding: 60px 24px; }
-    #contact { padding: 80px 24px; }
-    footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
-    .skills-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  }
-
-  @media (max-width: 600px) {
-    .skills-grid { grid-template-columns: 1fr; }
-    .nav-links { display: none; }
-  }
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--accent:#00e5a0;--accent2:#7c3aed;--accent3:#f59e0b;--text:#e8e8f0;--muted:#6b6b8a;--border:rgba(255,255,255,0.08);--danger:#e24b4a;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;}
+.cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.1s;mix-blend-mode:screen;}
+.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid var(--accent);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all 0.15s ease;opacity:0.5;}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5;}
+
+/* LOADING SCREEN */
+#loading-screen{position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+.loading-logo{font-family:'Space Mono',monospace;font-size:2rem;color:var(--accent);letter-spacing:0.2em;margin-bottom:2rem;animation:pulse 1.5s infinite;}
+.loading-bar-wrap{width:200px;height:2px;background:var(--surface2);}
+.loading-bar{height:100%;background:var(--accent);width:0%;transition:width 0.3s;}
+.loading-status{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.2em;margin-top:1rem;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* SYNC INDICATOR */
+.sync-indicator{position:fixed;bottom:1.5rem;left:1.5rem;z-index:300;font-family:'Space Mono',monospace;font-size:0.65rem;display:flex;align-items:center;gap:0.5rem;opacity:0;transition:opacity 0.3s;}
+.sync-indicator.show{opacity:1;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.sync-dot.saving{background:var(--accent3);animation:blink 0.5s infinite;}
+.sync-dot.error{background:var(--danger);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;z-index:200;padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);letter-spacing:0.1em;}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
+.nav-links a:hover{color:var(--accent);}
+.admin-btn{font-family:'Space Mono',monospace;font-size:0.7rem;padding:0.5rem 1rem;border:1px solid var(--border);color:var(--muted);background:none;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;}
+.admin-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+section{max-width:1200px;margin:0 auto;padding:8rem 3rem 5rem;}
+#hero{display:flex;align-items:center;min-height:100vh;padding:0 6rem;max-width:none;position:relative;}
+.hero-tag{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;}
+.hero-tag::before{content:'';display:block;width:40px;height:1px;background:var(--accent);}
+h1{font-size:clamp(3.5rem,8vw,7rem);font-weight:800;line-height:0.95;letter-spacing:-0.03em;margin-bottom:0.5rem;}
+.hero-name{color:var(--text);}
+.hero-role{color:transparent;-webkit-text-stroke:1px var(--accent);display:block;}
+.hero-desc{margin-top:2rem;font-size:1.05rem;color:var(--muted);max-width:500px;line-height:1.7;}
+.hero-ctas{margin-top:3rem;display:flex;gap:1.5rem;flex-wrap:wrap;}
+.btn-primary{padding:0.85rem 2rem;background:var(--accent);color:#0a0a0f;font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);border:none;cursor:pointer;display:inline-block;}
+.btn-primary:hover{background:#fff;transform:translateY(-2px);}
+.btn-outline{padding:0.85rem 2rem;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:0.8rem;letter-spacing:0.1em;text-decoration:none;text-transform:uppercase;transition:all 0.2s;background:none;cursor:pointer;}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.hero-stats{margin-top:4rem;display:flex;gap:3rem;flex-wrap:wrap;}
+.stat-num{font-size:2.5rem;font-weight:800;color:var(--accent);font-family:'Space Mono',monospace;line-height:1;}
+.stat-label{font-size:0.8rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.3rem;}
+.scroll-hint{position:absolute;bottom:3rem;left:6rem;display:flex;align-items:center;gap:1rem;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;}
+.scroll-line{width:60px;height:1px;background:var(--muted);position:relative;overflow:hidden;}
+.scroll-line::after{content:'';position:absolute;left:-100%;top:0;width:100%;height:100%;background:var(--accent);animation:scrollAnim 2s infinite;}
+@keyframes scrollAnim{0%{left:-100%}100%{left:100%}}
+
+.section-header{margin-bottom:4rem;}
+.section-tag{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:1rem;}
+h2{font-size:clamp(2.5rem,5vw,4rem);font-weight:800;letter-spacing:-0.03em;line-height:1;}
+h2 span{color:transparent;-webkit-text-stroke:1px var(--muted);}
+
+.about-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:5rem;align-items:start;}
+.about-photo-frame{width:100%;aspect-ratio:3/4;background:var(--surface2);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.about-photo-frame::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,160,0.05) 0%,transparent 60%);z-index:1;pointer-events:none;}
+.photo-initials{font-size:6rem;font-weight:800;color:var(--accent);opacity:0.2;font-family:'Space Mono',monospace;}
+.about-badge{position:absolute;bottom:-1rem;right:-1rem;background:var(--accent);color:#0a0a0f;padding:1rem 1.5rem;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;}
+.about-corner{position:absolute;top:-1rem;left:-1rem;width:60px;height:60px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);}
+.about-text p{color:var(--muted);line-height:1.8;margin-bottom:1.5rem;font-size:0.95rem;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem;}
+.info-item{border:1px solid var(--border);padding:1rem;background:var(--surface);}
+.info-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.3rem;}
+.info-val{font-size:0.9rem;color:var(--text);}
+
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;}
+.skill-card{background:var(--surface);border:1px solid var(--border);padding:2rem;position:relative;overflow:hidden;transition:border-color 0.3s,transform 0.3s;}
+.skill-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
+.skill-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-4px);}
+.skill-card:hover::before{transform:scaleX(1);}
+.skill-icon{width:48px;height:48px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1.5rem;border:1px solid var(--border);}
+.skill-title{font-size:1rem;font-weight:700;margin-bottom:1rem;}
+.skill-tags{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.tag{font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.6rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.tag.accent{background:rgba(0,229,160,0.1);color:var(--accent);border-color:rgba(0,229,160,0.3);}
+
+.exp-timeline{position:relative;padding-left:2rem;}
+.exp-timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border);}
+.exp-item{position:relative;margin-bottom:2rem;padding:2rem;background:var(--surface);border:1px solid var(--border);margin-left:2rem;transition:border-color 0.3s;}
+.exp-item:hover{border-color:rgba(0,229,160,0.3);}
+.exp-item::before{content:'';position:absolute;left:-3rem;top:2rem;width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 4px var(--bg),0 0 0 5px var(--accent);}
+.exp-period{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.5rem;}
+.exp-role{font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;}
+.exp-company{font-size:0.85rem;color:var(--muted);margin-bottom:1rem;}
+.exp-bullets{list-style:none;}
+.exp-bullets li{font-size:0.85rem;color:var(--muted);padding:0.3rem 0 0.3rem 1rem;position:relative;line-height:1.5;}
+.exp-bullets li::before{content:'›';position:absolute;left:0;color:var(--accent);}
+
+.edu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:3rem;}
+.edu-card{background:var(--surface);border:1px solid var(--border);padding:2rem;transition:border-color 0.3s;}
+.edu-card:hover{border-color:rgba(124,58,237,0.4);}
+.edu-year{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent2);letter-spacing:0.1em;margin-bottom:0.8rem;}
+.edu-degree{font-size:1rem;font-weight:700;margin-bottom:0.3rem;}
+.edu-school{font-size:0.85rem;color:var(--muted);margin-bottom:1rem;}
+.edu-credits{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);background:rgba(0,229,160,0.1);padding:0.4rem 0.8rem;display:inline-block;border:1px solid rgba(0,229,160,0.2);}
+
+.courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.8rem;}
+.course-item{background:var(--surface);border:1px solid var(--border);padding:0.8rem 1rem;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;font-size:0.82rem;}
+.course-item:hover{border-color:rgba(0,229,160,0.3);}
+.course-grade{font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;padding:0.2rem 0.5rem;min-width:32px;text-align:center;}
+.grade-5{color:#00e5a0;background:rgba(0,229,160,0.1);}
+.grade-3,.grade-4{color:#f59e0b;background:rgba(245,158,11,0.1);}
+.grade-2{color:#f59e0b;background:rgba(245,158,11,0.08);}
+.grade-1{color:#6b6b8a;background:rgba(107,107,138,0.1);}
+.grade-p{color:#7c3aed;background:rgba(124,58,237,0.1);}
+
+.certs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
+.cert-card{background:var(--surface);border:1px solid var(--border);padding:1.5rem;position:relative;overflow:hidden;transition:all 0.3s;}
+.cert-card:hover{border-color:rgba(245,158,11,0.4);transform:translateY(-3px);}
+.cert-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent3);}
+.cert-icon{font-size:1.5rem;margin-bottom:0.8rem;}
+.cert-name{font-size:0.9rem;font-weight:700;line-height:1.3;}
+.cert-issuer{font-size:0.75rem;color:var(--muted);margin-top:0.3rem;}
+.cert-featured-wrap{background:var(--surface);border:1px solid rgba(0,229,160,0.3);padding:2rem;position:relative;margin-bottom:1rem;display:flex;align-items:center;gap:2rem;}
+.cert-featured-label{position:absolute;top:1rem;right:1rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent);letter-spacing:0.2em;padding:0.3rem 0.6rem;border:1px solid rgba(0,229,160,0.3);}
+.cert-featured-title{font-size:1rem;font-weight:700;margin-bottom:0.3rem;}
+.cert-featured-sub{font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem;}
+.cert-featured-date{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent3);}
+
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;}
+.contact-link{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;background:var(--surface);border:1px solid var(--border);text-decoration:none;color:var(--text);transition:all 0.2s;margin-bottom:1rem;}
+.contact-link:hover{border-color:var(--accent);color:var(--accent);}
+.contact-link-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);margin-left:auto;text-transform:uppercase;letter-spacing:0.1em;}
+.contact-form-wrap{display:flex;flex-direction:column;gap:1rem;}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;}
+.form-group label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.2em;text-transform:uppercase;}
+.form-group input,.form-group textarea{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.9rem 1rem;font-family:'Syne',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group textarea{min-height:120px;}
+
+footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.footer-text{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);}
+.footer-text span{color:var(--accent);}
+
+.fade-up{opacity:0;transform:translateY(40px);transition:opacity 0.8s ease,transform 0.8s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+
+/* ===== ADMIN ===== */
+#admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;overflow-y:auto;backdrop-filter:blur(8px);}
+#admin-overlay.show{display:flex;}
+.admin-container{width:100%;max-width:980px;margin:auto;padding:2rem;}
+.admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.admin-title{font-family:'Space Mono',monospace;font-size:1.1rem;color:var(--accent);letter-spacing:0.15em;}
+.admin-close{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:0.75rem;padding:0.5rem 1rem;cursor:pointer;letter-spacing:0.1em;transition:all 0.2s;}
+.admin-close:hover{border-color:var(--danger);color:var(--danger);}
+.admin-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;}
+.admin-tab{font-family:'Space Mono',monospace;font-size:0.7rem;padding:0.6rem 1.2rem;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;}
+.admin-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.08);}
+.admin-tab:hover{border-color:var(--accent);color:var(--accent);}
+.admin-panel{display:none;}
+.admin-panel.active{display:block;}
+.admin-section-title{font-family:'Space Mono',monospace;font-size:0.8rem;color:var(--text);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.5rem;padding-bottom:0.8rem;border-bottom:1px solid var(--border);}
+.admin-field{margin-bottom:1.2rem;}
+.admin-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.4rem;display:block;}
+.admin-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem 1rem;font-family:'Syne',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.admin-input:focus{border-color:var(--accent);}
+.admin-textarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem 1rem;font-family:'Syne',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;resize:vertical;min-height:90px;}
+.admin-textarea:focus{border-color:var(--accent);}
+.admin-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.admin-hint{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.3rem;}
+.admin-list-item{background:var(--surface);border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem;}
+.btn-delete{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.7rem;cursor:pointer;transition:all 0.2s;}
+.btn-delete:hover{border-color:var(--danger);color:var(--danger);}
+.btn-add{background:none;border:1px solid rgba(0,229,160,0.3);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.7rem;padding:0.6rem 1.2rem;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;display:inline-flex;align-items:center;gap:0.5rem;}
+.btn-add:hover{background:rgba(0,229,160,0.1);}
+.btn-save-all{background:var(--accent);color:#0a0a0f;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;padding:0.8rem 2rem;border:none;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);}
+.btn-save-all:hover{background:#fff;}
+.btn-save-all:disabled{opacity:0.5;cursor:not-allowed;}
+.save-bar{position:sticky;bottom:0;background:rgba(10,10,15,0.97);border-top:1px solid var(--border);padding:1rem 0;margin-top:2rem;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);}
+.save-hint{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);}
+.save-success{color:var(--accent);}
+.save-error{color:var(--danger);}
+
+#login-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+#login-modal.show{display:flex;}
+.login-box{background:var(--surface);border:1px solid var(--border);padding:3rem;width:100%;max-width:420px;}
+.login-title{font-family:'Space Mono',monospace;font-size:0.9rem;color:var(--accent);letter-spacing:0.15em;margin-bottom:0.5rem;text-transform:uppercase;}
+.login-subtitle{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:2rem;letter-spacing:0.05em;}
+.login-error{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--danger);margin-top:0.8rem;display:none;}
+
+.img-upload-area{border:1px dashed var(--border);padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s;position:relative;}
+.img-upload-area:hover{border-color:var(--accent);}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-upload-label{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;}
+
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface);border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.75rem;padding:1rem 1.5rem;z-index:5000;letter-spacing:0.05em;transform:translateY(100px);transition:transform 0.3s;}
+.toast.show{transform:translateY(0);}
+.toast.error-toast{border-color:var(--danger);color:var(--danger);}
+
+.firebase-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent3);border:1px solid rgba(245,158,11,0.3);padding:0.3rem 0.8rem;margin-left:1rem;}
+.firebase-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem;}
+  .nav-links{display:none;}
+  section{padding:6rem 1.5rem 3rem;}
+  #hero{padding:6rem 1.5rem 3rem;}
+  h1{font-size:3rem;}
+  .about-grid,.contact-grid{grid-template-columns:1fr;gap:3rem;}
+  footer{flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
+  .scroll-hint{display:none;}
+  .admin-grid-2{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-logo">PK_</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+  <div class="loading-status" id="loading-status">Connecting to Firebase...</div>
+</div>
+
+<canvas id="bg-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div class="toast" id="toast"></div>
+
+<!-- SYNC INDICATOR -->
+<div class="sync-indicator" id="sync-indicator">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span id="sync-text">Synced</span>
+</div>
+
+<!-- LOGIN -->
+<div id="login-modal">
+  <div class="login-box">
+    <div class="login-title">// Admin Access</div>
+    <div class="login-subtitle">Changes save to Firebase — visible to all visitors</div>
+    <div class="admin-field">
+      <label class="admin-label">Password</label>
+      <input type="password" class="admin-input" id="login-pw" placeholder="Enter admin password" autocomplete="off">
+    </div>
+    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;">
+      <button class="btn-save-all" onclick="doLogin()">Access Panel →</button>
+      <button class="admin-close" onclick="closeLogin()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-overlay">
+  <div class="admin-container">
+    <div class="admin-header">
+      <div style="display:flex;align-items:center;">
+        <div class="admin-title">// Admin Panel</div>
+        <div class="firebase-badge"><div class="firebase-dot"></div>Firebase Live</div>
+      </div>
+      <div style="display:flex;gap:1rem;align-items:center;">
+        <button class="btn-save-all" id="main-save-btn" onclick="saveAll()">Save to Firebase →</button>
+        <button class="admin-close" onclick="closeAdmin()">✕ Close</button>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('hero')">Hero</button>
+      <button class="admin-tab" onclick="switchTab('about')">About</button>
+      <button class="admin-tab" onclick="switchTab('skills')">Skills</button>
+      <button class="admin-tab" onclick="switchTab('experience')">Experience</button>
+      <button class="admin-tab" onclick="switchTab('education')">Education</button>
+      <button class="admin-tab" onclick="switchTab('courses')">Courses</button>
+      <button class="admin-tab" onclick="switchTab('certs')">Certificates</button>
+      <button class="admin-tab" onclick="switchTab('contact')">Contact</button>
+      <button class="admin-tab" onclick="switchTab('settings')">Settings</button>
+    </div>
+
+    <!-- HERO -->
+    <div class="admin-panel active" id="tab-hero">
+      <div class="admin-section-title">Hero Section</div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">First Name</label><input class="admin-input" id="a-first-name"></div>
+        <div class="admin-field"><label class="admin-label">Last Name</label><input class="admin-input" id="a-last-name"></div>
+      </div>
+      <div class="admin-field"><label class="admin-label">Status Tag</label><input class="admin-input" id="a-status-tag"></div>
+      <div class="admin-field"><label class="admin-label">Short Description</label><textarea class="admin-textarea" id="a-hero-desc"></textarea></div>
+      <div class="admin-section-title" style="margin-top:1.5rem;">Stats (4 boxes)</div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Stat 1 Number</label><input class="admin-input" id="a-stat1-num"></div>
+        <div class="admin-field"><label class="admin-label">Stat 1 Label</label><input class="admin-input" id="a-stat1-label"></div>
+        <div class="admin-field"><label class="admin-label">Stat 2 Number</label><input class="admin-input" id="a-stat2-num"></div>
+        <div class="admin-field"><label class="admin-label">Stat 2 Label</label><input class="admin-input" id="a-stat2-label"></div>
+        <div class="admin-field"><label class="admin-label">Stat 3 Number</label><input class="admin-input" id="a-stat3-num"></div>
+        <div class="admin-field"><label class="admin-label">Stat 3 Label</label><input class="admin-input" id="a-stat3-label"></div>
+        <div class="admin-field"><label class="admin-label">Stat 4 Number</label><input class="admin-input" id="a-stat4-num"></div>
+        <div class="admin-field"><label class="admin-label">Stat 4 Label</label><input class="admin-input" id="a-stat4-label"></div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="admin-panel" id="tab-about">
+      <div class="admin-section-title">About Section</div>
+      <div class="admin-field">
+        <label class="admin-label">Profile Photo</label>
+        <div class="img-upload-area">
+          <input type="file" accept="image/*" onchange="handlePhotoUpload(event)">
+          <div class="img-upload-label">Click to upload photo (JPG, PNG — stored as base64)</div>
+          <img id="photo-preview" style="max-width:100%;max-height:180px;display:none;margin-top:1rem;object-fit:cover;">
+        </div>
+        <div class="admin-hint" style="margin-top:0.5rem;">⚠ Large images may exceed Firestore's 1MB limit. Resize to under 400KB before uploading.</div>
+      </div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Location Badge</label><input class="admin-input" id="a-location-badge"></div>
+        <div class="admin-field"><label class="admin-label">Subtitle</label><input class="admin-input" id="a-about-subtitle"></div>
+      </div>
+      <div class="admin-field"><label class="admin-label">Paragraph 1</label><textarea class="admin-textarea" id="a-about-p1"></textarea></div>
+      <div class="admin-field"><label class="admin-label">Paragraph 2</label><textarea class="admin-textarea" id="a-about-p2"></textarea></div>
+      <div class="admin-section-title" style="margin-top:2rem;">Info Grid (4 items)</div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Label 1</label><input class="admin-input" id="a-info1-label"></div>
+        <div class="admin-field"><label class="admin-label">Value 1</label><input class="admin-input" id="a-info1-val"></div>
+        <div class="admin-field"><label class="admin-label">Label 2</label><input class="admin-input" id="a-info2-label"></div>
+        <div class="admin-field"><label class="admin-label">Value 2</label><input class="admin-input" id="a-info2-val"></div>
+        <div class="admin-field"><label class="admin-label">Label 3</label><input class="admin-input" id="a-info3-label"></div>
+        <div class="admin-field"><label class="admin-label">Value 3</label><input class="admin-input" id="a-info3-val"></div>
+        <div class="admin-field"><label class="admin-label">Label 4</label><input class="admin-input" id="a-info4-label"></div>
+        <div class="admin-field"><label class="admin-label">Value 4</label><input class="admin-input" id="a-info4-val"></div>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="admin-panel" id="tab-skills">
+      <div class="admin-section-title">Skill Cards</div>
+      <div id="skills-admin-list"></div>
+      <button class="btn-add" onclick="addSkill()">+ Add Skill Card</button>
+    </div>
+
+    <!-- EXPERIENCE -->
+    <div class="admin-panel" id="tab-experience">
+      <div class="admin-section-title">Work Experience</div>
+      <div id="exp-admin-list"></div>
+      <button class="btn-add" onclick="addExp()">+ Add Experience</button>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="admin-panel" id="tab-education">
+      <div class="admin-section-title">Education</div>
+      <div id="edu-admin-list"></div>
+      <button class="btn-add" onclick="addEdu()">+ Add Education</button>
+    </div>
+
+    <!-- COURSES -->
+    <div class="admin-panel" id="tab-courses">
+      <div class="admin-section-title">Course Highlights</div>
+      <p style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);margin-bottom:1.5rem;">Grade: 5, 4, 3, 2, 1, or P</p>
+      <div id="courses-admin-list"></div>
+      <button class="btn-add" onclick="addCourse()">+ Add Course</button>
+    </div>
+
+    <!-- CERTS -->
+    <div class="admin-panel" id="tab-certs">
+      <div class="admin-section-title">Certificates</div>
+      <div id="certs-admin-list"></div>
+      <button class="btn-add" onclick="addCert()">+ Add Certificate</button>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="admin-panel" id="tab-contact">
+      <div class="admin-section-title">Contact Info</div>
+      <div class="admin-field"><label class="admin-label">Section Heading</label><input class="admin-input" id="a-contact-heading"></div>
+      <div class="admin-field"><label class="admin-label">Description</label><textarea class="admin-textarea" id="a-contact-desc"></textarea></div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Email</label><input class="admin-input" id="a-email"></div>
+        <div class="admin-field"><label class="admin-label">Phone</label><input class="admin-input" id="a-phone"></div>
+        <div class="admin-field"><label class="admin-label">LinkedIn URL</label><input class="admin-input" id="a-linkedin"></div>
+        <div class="admin-field"><label class="admin-label">GitHub URL</label><input class="admin-input" id="a-github"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="admin-panel" id="tab-settings">
+      <div class="admin-section-title">Site Settings</div>
+      <div class="admin-field"><label class="admin-label">Browser Tab Title</label><input class="admin-input" id="a-site-title"></div>
+      <div class="admin-field"><label class="admin-label">Footer Left</label><input class="admin-input" id="a-footer-left"></div>
+      <div class="admin-field"><label class="admin-label">Footer Right</label><input class="admin-input" id="a-footer-right"></div>
+      <div class="admin-section-title" style="margin-top:2.5rem;">Change Admin Password</div>
+      <div class="admin-hint" style="margin-bottom:1rem;">Password is stored in Firebase — shared across all devices.</div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Current Password</label><input type="password" class="admin-input" id="a-pw-current"></div>
+        <div class="admin-field"><label class="admin-label">New Password (min 6 chars)</label><input type="password" class="admin-input" id="a-pw-new"></div>
+      </div>
+      <button class="btn-add" onclick="changePassword()">Update Password</button>
+      <div class="admin-section-title" style="margin-top:2.5rem;">Data Management</div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <button class="btn-add" onclick="exportData()">⬇ Export JSON Backup</button>
+        <label class="btn-add" style="cursor:pointer;">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+        <button class="btn-delete" style="padding:0.6rem 1.2rem;" onclick="if(confirm('Reset ALL data to defaults?'))resetData()">⚠ Reset to Defaults</button>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <div class="save-hint" id="save-status">All changes save to Firebase — visible to every visitor worldwide</div>
+      <button class="btn-save-all" id="save-bar-btn" onclick="saveAll()">Save to Firebase →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PORTFOLIO -->
+<div class="portfolio-view">
 <nav>
-  <a class="nav-logo" href="#hero">PK</a>
-  <ul class="nav-links">
-    <li><a href="#about">About</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#experience">Experience</a></li>
-    <li><a href="#education">Education</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ul>
+  <div class="nav-logo" id="nav-logo">PK_</div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#experience">Experience</a>
+    <a href="#education">Education</a>
+    <a href="#certs">Certs</a>
+    <a href="#contact">Contact</a>
+    <button class="admin-btn" onclick="openLogin()">⚙ Admin</button>
+  </div>
 </nav>
 
-<!-- HERO -->
 <section id="hero">
-  <div class="hero-orb hero-orb-1"></div>
-  <div class="hero-orb hero-orb-2"></div>
-  <div class="hero-content">
-    <div class="hero-label">Based in Helsinki, Finland</div>
-    <h1 class="hero-name">Pushpa<br><span>Koirala</span></h1>
-    <p class="hero-tagline">Connecting the factory floor to the cloud — automation engineer, embedded systems builder, and founder driven by curiosity.</p>
-    <div class="hero-badges">
-      <span class="badge badge-cyan">Industrial Automation</span>
-      <span class="badge badge-green">SCADA System</span>
-      <span class="badge badge-green">SCARA System</span>
-      <span class="badge badge-cyan">IoT & Embedded Systems</span>
-      <span class="badge badge-purple">HMI Programming</span>
-      <span class="badge badge-purple">Machine Vision & Robotics</span>
-      <span class="badge badge-green">VAlMET DNA</span>
-      <span class="badge badge-green">DCS System</span>
-      <span class="badge badge-green">PLC Programming</span>
-      <span class="badge badge-cyan">Control Systems</span>
-      <span class="badge badge-purple">Electrical & Electronics Engineering</span>
+  <div style="max-width:900px;">
+    <div class="hero-tag fade-up" id="hero-tag-el"></div>
+    <h1>
+      <span class="hero-name fade-up" id="hero-first"></span><br>
+      <span class="hero-role fade-up" id="hero-last"></span>
+    </h1>
+    <p class="hero-desc fade-up" id="hero-desc-el"></p>
+    <div class="hero-ctas fade-up">
+      <a href="#contact" class="btn-primary">Get in touch →</a>
+      <a href="#experience" class="btn-outline">View work</a>
     </div>
-    <div class="hero-cta">
-      <a class="btn btn-primary" href="#contact">Get in Touch</a>
-      <a class="btn btn-ghost" href="#experience">View Experience</a>
-    </div>
+    <div class="hero-stats fade-up" id="hero-stats-el"></div>
   </div>
-  <div class="hero-stats">
-    <div class="stat">
-      <div class="stat-num">4+</div>
-      <div class="stat-label">Years Experience</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">5</div>
-      <div class="stat-label">Certifications</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">3</div>
-      <div class="stat-label">Languages</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">1</div>
-      <div class="stat-label">Company Founded</div>
-    </div>
-  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>Scroll to explore</div>
 </section>
 
-<!-- ABOUT -->
 <section id="about">
-  <div class="reveal">
-    <div class="section-tag">// About Me</div>
-    <h2 class="section-title">Engineering smarter,<br>safer systems</h2>
-    <p class="about-text">I'm an Automation and Electrical Engineering student at JAMK University of Applied Sciences, passionate about electronics, embedded systems, and industrial automation. My experience spans PCB design, firmware development, system troubleshooting, and robotics.</p>
-    <p class="about-text">I founded Nexara Fusion, a technology company building AI-powered software, automation platforms, and digital solutions. I'm driven by the desire to build systems that are smarter, more connected, and future-ready.</p>
-    <br>
-    <a class="btn btn-ghost" href="mailto:thepushpaco@outlook.com">thepushpaco@outlook.com</a>
+  <div class="section-header fade-up">
+    <div class="section-tag">01 / About</div>
+    <h2>Who I <span>am</span></h2>
   </div>
-  <div class="reveal" style="transition-delay:0.15s">
-    <div class="about-card">
-      <div class="section-tag" style="margin-bottom:8px">// Certifications</div>
-      <div class="cert-grid">
-        <div class="cert-item"><div class="cert-dot"></div>Certified Sustainable Development Professional (CSDP)</div>
-        <div class="cert-item"><div class="cert-dot"></div>Electrical Safety Training — SFS 60002 Standard</div>
-        <div class="cert-item"><div class="cert-dot"></div>Mine Robotics Certification</div>
-        <div class="cert-item"><div class="cert-dot"></div>AI & Cybersecurity Certification</div>
-        <div class="cert-item"><div class="cert-dot"></div>Occupational Safety Card</div>
+  <div class="about-grid">
+    <div style="position:relative;" class="fade-up">
+      <div class="about-corner"></div>
+      <div class="about-photo-frame" id="about-photo-frame">
+        <div class="photo-initials" id="about-initials">PK</div>
       </div>
+      <div class="about-badge" id="about-badge-el"></div>
+    </div>
+    <div class="fade-up">
+      <h3 style="font-size:1.4rem;margin-bottom:1.2rem;font-weight:700;" id="about-subtitle-el"></h3>
+      <p id="about-p1-el"></p>
+      <p id="about-p2-el"></p>
+      <div class="info-grid" id="about-info-grid"></div>
     </div>
   </div>
 </section>
 
-<!-- SKILLS -->
 <section id="skills">
-  <div class="skills-inner">
-    <div class="skills-header reveal">
-      <div>
-        <div class="section-tag">// Core Competencies</div>
-        <h2 class="section-title">Technical Expertise</h2>
-      </div>
-    </div>
-    <div class="skills-grid">
-      <div class="skill-card reveal">
-        <div class="skill-icon">⚡</div>
-        <div class="skill-card-title">Electronics & Hardware</div>
-        <div class="skill-tags">
-          <span class="skill-tag">PCB Design</span>
-          <span class="skill-tag">Analog Circuits</span>
-          <span class="skill-tag">Digital Circuits</span>
-          <span class="skill-tag">Embedded Systems</span>
-          <span class="skill-tag">Firmware Dev</span>
-          <span class="skill-tag">LTSpice</span>
-        </div>
-      </div>
-      <div class="skill-card reveal" style="transition-delay:0.1s">
-        <div class="skill-icon">🏭</div>
-        <div class="skill-card-title">Industrial Automation</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Siemens TIA Portal</span>
-          <span class="skill-tag">PLC Programming</span>
-          <span class="skill-tag">Profibus DP</span>
-          <span class="skill-tag">Control Logic</span>
-          <span class="skill-tag">SCADA</span>
-        </div>
-      </div>
-      <div class="skill-card reveal" style="transition-delay:0.2s">
-        <div class="skill-icon">💻</div>
-        <div class="skill-card-title">Software & Programming</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Python</span>
-          <span class="skill-tag">PHP</span>
-          <span class="skill-tag">MATLAB/SIMULINK</span>
-          <span class="skill-tag">LabVIEW</span>
-          <span class="skill-tag">AutoCAD</span>
-        </div>
-      </div>
-      <div class="skill-card reveal" style="transition-delay:0.1s">
-        <div class="skill-icon">🌐</div>
-        <div class="skill-card-title">Networking & IoT</div>
-        <div class="skill-tags">
-          <span class="skill-tag">TCP/IP</span>
-          <span class="skill-tag">IoT Devices</span>
-          <span class="skill-tag">Fiber-Optic</span>
-          <span class="skill-tag">OTDR</span>
-          <span class="skill-tag">Network Integration</span>
-        </div>
-      </div>
-      <div class="skill-card reveal" style="transition-delay:0.2s">
-        <div class="skill-icon">🤖</div>
-        <div class="skill-card-title">AI & Robotics</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Machine Vision</span>
-          <span class="skill-tag">Neural Networks</span>
-          <span class="skill-tag">AI Fundamentals</span>
-          <span class="skill-tag">Mine Robotics</span>
-          <span class="skill-tag">3D Printing</span>
-        </div>
-      </div>
-      <div class="skill-card reveal" style="transition-delay:0.3s">
-        <div class="skill-icon">🔒</div>
-        <div class="skill-card-title">Cybersecurity</div>
-        <div class="skill-tags">
-          <span class="skill-tag">Cybersecurity Fundamentals</span>
-          <span class="skill-tag">System Security</span>
-          <span class="skill-tag">Safety Standards</span>
-          <span class="skill-tag">SFS 60002</span>
-        </div>
-      </div>
-    </div>
+  <div class="section-header fade-up">
+    <div class="section-tag">02 / Skills</div>
+    <h2>What I <span>know</span></h2>
   </div>
+  <div class="skills-grid" id="skills-grid-el"></div>
 </section>
 
-<!-- EXPERIENCE -->
 <section id="experience">
-  <div class="exp-header reveal">
-    <div class="section-tag">// Work History</div>
-    <h2 class="section-title">Professional Experience</h2>
+  <div class="section-header fade-up">
+    <div class="section-tag">03 / Experience</div>
+    <h2>What I've <span>built</span></h2>
   </div>
-  <div class="timeline">
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">AUG 2023 — PRESENT · FINLAND</div>
-      <div class="exp-role">Founder & Technology Lead</div>
-      <div class="exp-company">Nexara Fusion</div>
-      <ul class="exp-desc">
-        <li>Founded an AI-powered technology company building scalable digital platforms and SaaS solutions</li>
-        <li>Delivered automation systems, web/mobile apps, and startup technology consulting</li>
-        <li>Led end-to-end product development from concept to deployment</li>
-      </ul>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">JUN 2025 — AUG 2025 · HELSINKI, FINLAND</div>
-      <div class="exp-role">Property Maintenance Technician</div>
-      <div class="exp-company">VISIO Henkilöstöratkaisut Uusimaa Oy</div>
-      <ul class="exp-desc">
-        <li>Performed property maintenance ensuring facilities met operational and safety standards</li>
-      </ul>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">APR 2025 · UUSIKAUPUNKI, FINLAND</div>
-      <div class="exp-role">Factory Technician</div>
-      <div class="exp-company">Novoplastik Oy</div>
-      <ul class="exp-desc">
-        <li>Operated industrial machinery and floor-polishing equipment in a manufacturing environment</li>
-        <li>Managed waste disposal and recycling in compliance with environmental safety regulations</li>
-      </ul>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">FEB 2023 — APR 2024 · CHITWAN, NEPAL</div>
-      <div class="exp-role">Assistant Electrician</div>
-      <div class="exp-company">Kharel Brothers Pvt. Ltd.</div>
-      <ul class="exp-desc">
-        <li>Installed, maintained, and repaired electrical systems and components on diverse job sites</li>
-        <li>Read and interpreted technical blueprints; conducted electrical tests and quality checks</li>
-        <li>Maintained strict safety standards in all electrical work environments</li>
-      </ul>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">MAR 2023 — AUG 2023 · NEPAL</div>
-      <div class="exp-role">Embedded Systems Support Engineer</div>
-      <div class="exp-company">SupaNirman Engineering & Construction Pvt. Ltd.</div>
-      <ul class="exp-desc">
-        <li>Designed PCBs and developed firmware for embedded systems and industrial machines</li>
-        <li>Built and tested prototypes; configured 3D printer firmware for manufacturing</li>
-        <li>Manufactured and supervised installation of industrial liquid-filling machines</li>
-      </ul>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-dot"></div>
-      <div class="exp-meta">DEC 2021 — FEB 2023 · CHITWAN, NEPAL</div>
-      <div class="exp-role">Service Technician Assistant</div>
-      <div class="exp-company">Vianet Communication</div>
-      <ul class="exp-desc">
-        <li>Installed optical fiber lines and performed routine maintenance on fiber-optic systems</li>
-        <li>Cut, spliced, and terminated fiber cables; used OTDR for fault diagnosis</li>
-        <li>Checked media converters and devices to ensure reliable internet service operations</li>
-      </ul>
-    </div>
-
-  </div>
+  <div class="exp-timeline" id="exp-timeline-el"></div>
 </section>
 
-<!-- EDUCATION -->
 <section id="education">
-  <div class="edu-inner">
-    <div class="reveal">
-      <div class="section-tag">// Academic Background</div>
-      <h2 class="section-title">Education</h2>
-    </div>
-    <div class="edu-grid">
-      <div class="edu-card reveal">
-        <div class="edu-year">2024 — 2028 (Expected)</div>
-        <div class="edu-degree">B.Eng. Electrical & Automation Engineering</div>
-        <div class="edu-school">JAMK University of Applied Sciences, Finland</div>
-      </div>
-      <div class="edu-card reveal" style="transition-delay:0.1s">
-        <div class="edu-year">2023 — 2024</div>
-        <div class="edu-degree">B.Sc. Information & Communication Technology Education</div>
-        <div class="edu-school">Institute of Science and Technology (IOST), Tribhuvan University, Nepal</div>
-      </div>
-      <div class="edu-card reveal" style="transition-delay:0.2s">
-        <div class="edu-year">2020 — 2022</div>
-        <div class="edu-degree">High School Diploma — Biology & General Sciences</div>
-        <div class="edu-school">Nepal Higher Secondary School</div>
-      </div>
-    </div>
+  <div class="section-header fade-up">
+    <div class="section-tag">04 / Education</div>
+    <h2>How I <span>learn</span></h2>
   </div>
+  <div class="edu-grid" id="edu-grid-el"></div>
+  <div class="section-tag fade-up" style="margin-bottom:1.5rem;">Academic Highlights</div>
+  <div class="courses-grid fade-up" id="courses-grid-el"></div>
 </section>
 
-<!-- LANGUAGES -->
-<section id="languages">
-  <div class="reveal">
-    <div class="section-tag">// Communication</div>
-    <h2 class="section-title">Languages</h2>
+<section id="certs">
+  <div class="section-header fade-up">
+    <div class="section-tag">05 / Certifications</div>
+    <h2>What I've <span>earned</span></h2>
   </div>
-  <div class="lang-row reveal">
-    <div class="lang-chip">
-      <div class="lang-flag">🇬🇧</div>
-      <div>
-        <div class="lang-name">English</div>
-        <div class="lang-level">Full Professional Proficiency</div>
-      </div>
-    </div>
-    <div class="lang-chip">
-      <div class="lang-flag">🇫🇮</div>
-      <div>
-        <div class="lang-name">Finnish</div>
-        <div class="lang-level">Limited Working Proficiency</div>
-      </div>
-    </div>
-    <div class="lang-chip">
-      <div class="lang-flag">🇳🇵</div>
-      <div>
-        <div class="lang-name">Nepali</div>
-        <div class="lang-level">Native / Bilingual</div>
-      </div>
-    </div>
-  </div>
+  <div id="certs-container-el"></div>
 </section>
 
-<!-- CONTACT -->
 <section id="contact">
-  <div class="contact-inner">
-    <div class="section-tag" style="text-align:center; margin-bottom:16px">// Get In Touch</div>
-    <h2 class="contact-title">Let's Build<br>Something Great</h2>
-    <p class="contact-sub">Open to engineering roles, automation projects, collaboration opportunities, and innovative tech ventures.</p>
-    <div class="contact-links">
-      <a class="contact-link" href="mailto:thepushpaco@outlook.com">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        thepushpaco@outlook.com
-      </a>
-      <a class="contact-link" href="https://www.linkedin.com/in/pushpakoirala/" target="_blank" rel="noopener">
-        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-        LinkedIn Profile
-      </a>
+  <div class="section-header fade-up">
+    <div class="section-tag">06 / Contact</div>
+    <h2>Let's <span>connect</span></h2>
+  </div>
+  <div class="contact-grid">
+    <div class="fade-up">
+      <h3 style="font-size:1.8rem;font-weight:700;margin-bottom:1.5rem;" id="contact-heading-el"></h3>
+      <p style="color:var(--muted);line-height:1.8;margin-bottom:2rem;font-size:0.95rem;" id="contact-desc-el"></p>
+      <div id="contact-links-el"></div>
+    </div>
+    <div class="fade-up">
+      <div class="contact-form-wrap">
+        <div class="form-group"><label>Your name</label><input type="text" placeholder="Jane Smith"></div>
+        <div class="form-group"><label>Your email</label><input type="email" placeholder="jane@company.com"></div>
+        <div class="form-group"><label>Message</label><textarea placeholder="Tell me about the opportunity..."></textarea></div>
+        <a id="contact-mailto-btn" href="#" class="btn-primary" style="text-align:center;">Send message →</a>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
-  <span>© 2026 Pushpa Koirala</span>
-  <span>Helsinki, Finland · Automation & Electrical Engineering</span>
+  <div class="footer-text" id="footer-left-el"></div>
+  <div class="footer-text" id="footer-right-el"></div>
 </footer>
+</div>
 
 <script>
-  // Intersection Observer for scroll reveals
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.12 });
+// ===================== DEFAULT DATA =====================
+const DEFAULT_DATA = {
+  password:"admin123",
+  hero:{firstName:"Pushpa",lastName:"Koirala",statusTag:"Available for opportunities",desc:"Automation & Electrical Engineering student at JAMK. Building the intersection of robotics, AI, and industrial systems.",stats:[{num:"118",label:"Credits completed"},{num:"3+",label:"Years experience"},{num:"10+",label:"Certifications"},{num:"5",label:"Physics grade (max)"}]},
+  about:{photo:"",locationBadge:"Helsinki, Finland",subtitle:"Engineer. Builder. Problem-solver.",p1:"I'm an Automation & Electrical Engineering student at JAMK University of Applied Sciences with a strong foundation in electronics, AI, cybersecurity, and industrial robotics. Originally from Nepal, now building my future in Finland.",p2:"My journey spans hardware repair, industrial welding & fabrication, electrical installation, and now advanced automation — including PLC programming, machine vision, and deep learning.",info:[{label:"Location",val:"Helsinki, Finland"},{label:"Program",val:"Automation & Robotics"},{label:"Email",val:"thepushpaco@outlook.com"},{label:"Phone",val:"+358 408 795 424"}]},
+  skills:[{icon:"⚙️",title:"Automation & PLC",tags:["Siemens TIA Portal","Valmet DNA","HMI Programming","Profibus DP","NI LabVIEW","Control Systems"]},{icon:"🤖",title:"AI & Machine Vision",tags:["Deep Learning","Machine Vision","Python (AI/ML)","MATLAB/Simulink","Cognex In-Sight","Cybersecurity"]},{icon:"💻",title:"Programming",tags:["Python","C/C#","SQL","Linux","Git/GitLab","TCP Modbus"]},{icon:"🔌",title:"Electrical Engineering",tags:["Circuit Design","AutoCAD","LTSpice","Power Systems","Functional Safety","Multimeter/Testing"]},{icon:"🏭",title:"Industrial & Robotics",tags:["Industrial Robotics","MIG/TIG Welding","Plasma Cutting","3D Printing","Jig/Fixture Setup","Blueprints"]},{icon:"🌐",title:"Other Tech",tags:["IoT Devices","Data Networks","5G Basics","CI/CD (Jenkins)","Automation Studio","Building Automation"]}],
+  experience:[{period:"2024 — Present",role:"Automation & Electrical Engineering Student",company:"JAMK University of Applied Sciences — Jyväskylä, Finland",bullets:["Completed PC-to-PLC communication project using TCP Modbus","Siemens TIA Portal programming with program structures and parameters","Machine Vision & Deep Learning coursework with NI LabVIEW","MATLAB/Simulink modeling for control circuits","Finished 12-credit practical training; seeking professional placement"]},{period:"May 2023 — Aug 2024",role:"Welder & Technician",company:"SupaNirman Engineering & Construction PVT LTD — Nepal",bullets:["Manufactured industrial liquid-filling machines from scratch","Developed prototypes and designed machinery parts","Certified MIG/TIG Welder; plasma cutting, jig/fixture setup","Robotic welding maintenance and machine installation"]},{period:"Nov 2022 — Apr 2023",role:"Hardware Technician",company:"A3Z Electronic Store — Nepal",bullets:["Component-level motherboard repairing and BIOS recovery","Electronics assembly, soldering, and thermal management","Software troubleshooting and data recovery"]},{period:"Jan 2022 — Aug 2022",role:"Electrician Trainee",company:"Kharel Brother PVT. LTD — Chitwan, Nepal",bullets:["Installed and maintained wiring and lighting systems","Read and interpreted technical blueprints and schematics","Conducted electrical tests and quality checks"]}],
+  education:[{year:"2024 — Present",degree:"Bachelor's in Automation and Robotics",school:"JAMK University of Applied Sciences, Finland",credits:"118 / 240 credits completed"},{year:"Prior",degree:"Information Communication Technology",school:"Tribhuwan University, Nepal",credits:"Credits recognized at JAMK"}],
+  courses:[{name:"Physics 1 — Force & Motion",grade:"5"},{name:"Physics 2 — Energy",grade:"5"},{name:"Phys 3 — Electromagnetism",grade:"5"},{name:"Basics of Programming",grade:"5"},{name:"Deep Learning",grade:"3"},{name:"Basics of Automation",grade:"3"},{name:"Digital Technology",grade:"3"},{name:"Math 3 — Derivative & Integral",grade:"1"},{name:"Measurement Technology",grade:"2"},{name:"Basics of Control Systems",grade:"2"},{name:"Functional Safety",grade:"1"},{name:"Finnish 1",grade:"1"},{name:"AI & Cybersecurity",grade:"P"},{name:"Robotics (LAB UAS)",grade:"P"},{name:"Cybersecurity Fundamentals",grade:"P"},{name:"Practical Training",grade:"12cr"}],
+  certs:[{icon:"🏗️",name:"FrEE: Introduction to Building Automation",issuer:"Metropolia / EU FrEE Project",date:"January 9, 2026",featured:true,sub:"Architecture of BAS · Sensors & Actuators · Field Controllers · Management Level"},{icon:"⚡",name:"Electrical Safety Training SF6000",issuer:"Finnish Standard",date:"",featured:false,sub:""},{icon:"🦺",name:"Occupational Safety Card",issuer:"Finnish Safety",date:"",featured:false,sub:""},{icon:"🏥",name:"Emergency First Aid Training",issuer:"First Aid Certificate",date:"",featured:false,sub:""},{icon:"🐍",name:"Python Programming",issuer:"Programming Certificate",date:"",featured:false,sub:""},{icon:"🔐",name:"AI & Cybersecurity",issuer:"University of Turku",date:"",featured:false,sub:""},{icon:"⛏️",name:"Mine Robotics",issuer:"Robotics Certificate",date:"",featured:false,sub:""},{icon:"🌍",name:"Invent For The Planet",issuer:"Global Innovation",date:"",featured:false,sub:""},{icon:"☁️",name:"Oracle Autonomous Database Cloud 2025",issuer:"Oracle Certified Professional",date:"",featured:false,sub:""}],
+  contact:{heading:"Open to opportunities",desc:"Currently seeking professional training and full-time roles in automation engineering, robotics, or industrial AI. Based in Helsinki, open to Finland and remote opportunities.",email:"thepushpaco@outlook.com",phone:"+358 408 795 424",linkedin:"https://linkedin.com",github:"https://github.com"},
+  settings:{siteTitle:"Pushpa Koirala — Portfolio",footerLeft:"© 2026 Pushpa Koirala — Built with passion",footerRight:"Helsinki, Finland · JAMK University"}
+};
 
-  document.querySelectorAll('.reveal, .exp-item').forEach(el => observer.observe(el));
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let firebaseAvailable = false;
 
-  // Active nav link highlight
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-links a');
-  window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(s => {
-      if (window.scrollY >= s.offsetTop - 120) current = s.id;
-    });
-    navLinks.forEach(a => {
-      a.style.color = a.getAttribute('href') === '#' + current
-        ? 'var(--accent)' : '';
-    });
+// ===================== LOADING =====================
+function setLoading(pct, msg){
+  document.getElementById('loading-bar').style.width = pct+'%';
+  document.getElementById('loading-status').textContent = msg;
+}
+function hideLoading(){
+  const s = document.getElementById('loading-screen');
+  s.classList.add('hidden');
+  setTimeout(()=>s.style.display='none', 600);
+}
+
+// ===================== FIREBASE INIT =====================
+async function initFirebase(){
+  setLoading(30, 'Connecting to Firebase...');
+  try {
+    const loaded = await window.__loadFromFirestore();
+    setLoading(70, 'Loading portfolio data...');
+    if(loaded){ DATA = loaded; }
+    firebaseAvailable = true;
+    setLoading(100, 'Ready!');
+  } catch(e){
+    firebaseAvailable = false;
+    setLoading(100, 'Firebase not configured — using defaults');
+    console.warn('Firebase not configured:', e);
+  }
+  setTimeout(()=>{
+    renderAll();
+    hideLoading();
+    initObserver();
+    initTilt();
+    initCanvas();
+    initCursor();
+    setTimeout(()=>{ document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150)); },200);
+  }, 400);
+}
+
+// Wait for Firebase module to load
+if(window.__firebaseReady){
+  initFirebase();
+} else {
+  window.addEventListener('firebase-ready', initFirebase);
+  // Fallback if Firebase module fails to load at all
+  setTimeout(()=>{
+    if(!window.__firebaseReady){
+      console.warn('Firebase module did not load');
+      renderAll(); hideLoading(); initObserver(); initTilt(); initCanvas(); initCursor();
+      setTimeout(()=>{ document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150)); },200);
+    }
+  }, 5000);
+}
+
+// ===================== SYNC UI =====================
+function showSync(state, msg){
+  const ind = document.getElementById('sync-indicator');
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  dot.className = 'sync-dot' + (state==='saving'?' saving':state==='error'?' error':'');
+  txt.textContent = msg;
+  ind.classList.add('show');
+  if(state==='synced') setTimeout(()=>ind.classList.remove('show'), 3000);
+}
+
+// ===================== RENDER =====================
+function renderAll(){ renderHero(); renderAbout(); renderSkills(); renderExp(); renderEdu(); renderCourses(); renderCerts(); renderContact(); renderFooter(); document.title = DATA.settings.siteTitle; }
+
+function renderHero(){
+  const h=DATA.hero;
+  document.getElementById('hero-first').textContent=h.firstName;
+  document.getElementById('hero-last').textContent=h.lastName+'_';
+  document.getElementById('nav-logo').textContent=(h.firstName[0]||'P')+(h.lastName[0]||'K')+'_';
+  document.getElementById('hero-tag-el').textContent=h.statusTag;
+  document.getElementById('hero-desc-el').textContent=h.desc;
+  document.getElementById('hero-stats-el').innerHTML=h.stats.map(s=>`<div class="stat-item"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+  document.getElementById('about-initials').textContent=(h.firstName[0]||'P')+(h.lastName[0]||'K');
+}
+function renderAbout(){
+  const a=DATA.about;
+  document.getElementById('about-badge-el').textContent=a.locationBadge;
+  document.getElementById('about-subtitle-el').textContent=a.subtitle;
+  document.getElementById('about-p1-el').textContent=a.p1;
+  document.getElementById('about-p2-el').textContent=a.p2;
+  const frame=document.getElementById('about-photo-frame');
+  const old=frame.querySelector('img.pk-photo'); if(old)old.remove();
+  if(a.photo){ const img=document.createElement('img'); img.src=a.photo; img.className='pk-photo'; img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;'; frame.appendChild(img); }
+  document.getElementById('about-info-grid').innerHTML=a.info.map(i=>`<div class="info-item"><div class="info-label">${i.label}</div><div class="info-val">${i.val}</div></div>`).join('');
+}
+function renderSkills(){
+  document.getElementById('skills-grid-el').innerHTML=DATA.skills.map(s=>`<div class="skill-card" data-tilt><div class="skill-icon">${s.icon}</div><div class="skill-title">${s.title}</div><div class="skill-tags">${s.tags.map((t,i)=>`<span class="tag${i===0?' accent':''}">${t}</span>`).join('')}</div></div>`).join('');
+  initTilt();
+}
+function renderExp(){
+  document.getElementById('exp-timeline-el').innerHTML=DATA.experience.map(e=>`<div class="exp-item fade-up"><div class="exp-period">${e.period}</div><div class="exp-role">${e.role}</div><div class="exp-company">${e.company}</div><ul class="exp-bullets">${e.bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`).join('');
+  initObserver();
+}
+function renderEdu(){
+  document.getElementById('edu-grid-el').innerHTML=DATA.education.map(e=>`<div class="edu-card fade-up"><div class="edu-year">${e.year}</div><div class="edu-degree">${e.degree}</div><div class="edu-school">${e.school}</div><div class="edu-credits">${e.credits}</div></div>`).join('');
+  initObserver();
+}
+function gradeClass(g){ return g==='5'?'grade-5':g==='4'?'grade-3':g==='3'?'grade-3':g==='2'?'grade-2':g==='1'?'grade-1':'grade-p'; }
+function renderCourses(){ document.getElementById('courses-grid-el').innerHTML=DATA.courses.map(c=>`<div class="course-item"><span>${c.name}</span><span class="course-grade ${gradeClass(c.grade)}">${c.grade}</span></div>`).join(''); }
+function renderCerts(){
+  const featured=DATA.certs.filter(c=>c.featured), regular=DATA.certs.filter(c=>!c.featured);
+  let html=featured.map(c=>`<div class="cert-featured-wrap fade-up"><div style="font-size:2.5rem;">${c.icon}</div><div><div class="cert-featured-title">${c.name}</div><div class="cert-featured-sub">${c.sub}</div><div class="cert-featured-date">${c.date?'Issued: '+c.date+' · ':''} ${c.issuer}</div></div><div class="cert-featured-label">FEATURED</div></div>`).join('');
+  html+=`<div class="certs-grid fade-up">${regular.map(c=>`<div class="cert-card"><div class="cert-icon">${c.icon}</div><div class="cert-name">${c.name}</div><div class="cert-issuer">${c.issuer}</div></div>`).join('')}</div>`;
+  document.getElementById('certs-container-el').innerHTML=html; initObserver();
+}
+function renderContact(){
+  const c=DATA.contact;
+  document.getElementById('contact-heading-el').textContent=c.heading;
+  document.getElementById('contact-desc-el').textContent=c.desc;
+  document.getElementById('contact-mailto-btn').href='mailto:'+c.email;
+  document.getElementById('contact-links-el').innerHTML=`
+    <a href="mailto:${c.email}" class="contact-link"><span>✉️</span><span>${c.email}</span><span class="contact-link-label">Email</span></a>
+    <a href="tel:${c.phone}" class="contact-link"><span>📱</span><span>${c.phone}</span><span class="contact-link-label">Phone</span></a>
+    ${c.linkedin?`<a href="${c.linkedin}" class="contact-link" target="_blank"><span>💼</span><span>LinkedIn Profile</span><span class="contact-link-label">LinkedIn</span></a>`:''}
+    ${c.github?`<a href="${c.github}" class="contact-link" target="_blank"><span>🐙</span><span>GitHub Profile</span><span class="contact-link-label">GitHub</span></a>`:''}`;
+}
+function renderFooter(){
+  document.getElementById('footer-left-el').innerHTML=DATA.settings.footerLeft.replace('Pushpa Koirala','<span>Pushpa Koirala</span>');
+  document.getElementById('footer-right-el').innerHTML=DATA.settings.footerRight.replace('·','<span>·</span>');
+}
+
+// ===================== ADMIN =====================
+function openLogin(){ document.getElementById('login-modal').classList.add('show'); setTimeout(()=>document.getElementById('login-pw').focus(),100); }
+function closeLogin(){ document.getElementById('login-modal').classList.remove('show'); document.getElementById('login-pw').value=''; document.getElementById('login-error').style.display='none'; }
+function doLogin(){ const pw=document.getElementById('login-pw').value; if(pw===DATA.password){ closeLogin(); openAdmin(); } else { document.getElementById('login-error').style.display='block'; document.getElementById('login-pw').value=''; document.getElementById('login-pw').focus(); } }
+document.getElementById('login-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+function openAdmin(){ populateAdminFields(); document.getElementById('admin-overlay').classList.add('show'); document.body.style.overflow='hidden'; }
+function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); document.body.style.overflow=''; }
+function switchTab(name){ const tabs=['hero','about','skills','experience','education','courses','certs','contact','settings']; document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name)); document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active')); document.getElementById('tab-'+name).classList.add('active'); }
+
+function populateAdminFields(){
+  const h=DATA.hero;
+  sv('a-first-name',h.firstName); sv('a-last-name',h.lastName); sv('a-status-tag',h.statusTag); sv('a-hero-desc',h.desc);
+  h.stats.forEach((s,i)=>{ sv(`a-stat${i+1}-num`,s.num); sv(`a-stat${i+1}-label`,s.label); });
+  const a=DATA.about;
+  sv('a-location-badge',a.locationBadge); sv('a-about-subtitle',a.subtitle); sv('a-about-p1',a.p1); sv('a-about-p2',a.p2);
+  if(a.photo){ const p=document.getElementById('photo-preview'); p.src=a.photo; p.style.display='block'; }
+  a.info.forEach((inf,i)=>{ sv(`a-info${i+1}-label`,inf.label); sv(`a-info${i+1}-val`,inf.val); });
+  renderSkillsAdmin(); renderExpAdmin(); renderEduAdmin(); renderCoursesAdmin(); renderCertsAdmin();
+  const c=DATA.contact; sv('a-contact-heading',c.heading); sv('a-contact-desc',c.desc); sv('a-email',c.email); sv('a-phone',c.phone); sv('a-linkedin',c.linkedin); sv('a-github',c.github);
+  const s=DATA.settings; sv('a-site-title',s.siteTitle); sv('a-footer-left',s.footerLeft); sv('a-footer-right',s.footerRight);
+}
+
+function sv(id,val){ const e=document.getElementById(id); if(e) e.value=val||''; }
+function gv(id){ const e=document.getElementById(id); return e?e.value:''; }
+
+// Skills Admin
+function renderSkillsAdmin(){
+  document.getElementById('skills-admin-list').innerHTML=DATA.skills.map((s,i)=>`
+    <div class="admin-list-item">
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);">Card ${i+1}: ${s.title}</span><button class="btn-delete" onclick="deleteSkill(${i})">✕</button></div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Icon</label><input class="admin-input" value="${s.icon}" onchange="DATA.skills[${i}].icon=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Title</label><input class="admin-input" value="${s.title}" onchange="DATA.skills[${i}].title=this.value"></div>
+      </div>
+      <div class="admin-field"><label class="admin-label">Tags (comma separated)</label><input class="admin-input" value="${s.tags.join(', ')}" onchange="DATA.skills[${i}].tags=this.value.split(',').map(t=>t.trim()).filter(Boolean)"><div class="admin-hint">First tag gets accent color</div></div>
+    </div>`).join('');
+}
+function addSkill(){ DATA.skills.push({icon:'🔧',title:'New Skill',tags:['Tag 1','Tag 2']}); renderSkillsAdmin(); }
+function deleteSkill(i){ DATA.skills.splice(i,1); renderSkillsAdmin(); }
+
+// Exp Admin
+function renderExpAdmin(){
+  document.getElementById('exp-admin-list').innerHTML=DATA.experience.map((e,i)=>`
+    <div class="admin-list-item">
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);">${e.role||'Experience '+(i+1)}</span><button class="btn-delete" onclick="deleteExp(${i})">✕</button></div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Period</label><input class="admin-input" value="${e.period}" onchange="DATA.experience[${i}].period=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Role</label><input class="admin-input" value="${e.role}" onchange="DATA.experience[${i}].role=this.value"></div>
+      </div>
+      <div class="admin-field"><label class="admin-label">Company & Location</label><input class="admin-input" value="${e.company}" onchange="DATA.experience[${i}].company=this.value"></div>
+      <div class="admin-field"><label class="admin-label">Bullet Points (one per line)</label><textarea class="admin-textarea" onchange="DATA.experience[${i}].bullets=this.value.split('\\n').filter(Boolean)">${e.bullets.join('\n')}</textarea></div>
+    </div>`).join('');
+}
+function addExp(){ DATA.experience.push({period:'',role:'New Role',company:'',bullets:['Responsibility']}); renderExpAdmin(); }
+function deleteExp(i){ DATA.experience.splice(i,1); renderExpAdmin(); }
+
+// Edu Admin
+function renderEduAdmin(){
+  document.getElementById('edu-admin-list').innerHTML=DATA.education.map((e,i)=>`
+    <div class="admin-list-item">
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);">${e.degree||'Education '+(i+1)}</span><button class="btn-delete" onclick="deleteEdu(${i})">✕</button></div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Year</label><input class="admin-input" value="${e.year}" onchange="DATA.education[${i}].year=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Credits</label><input class="admin-input" value="${e.credits}" onchange="DATA.education[${i}].credits=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Degree</label><input class="admin-input" value="${e.degree}" onchange="DATA.education[${i}].degree=this.value"></div>
+        <div class="admin-field"><label class="admin-label">School</label><input class="admin-input" value="${e.school}" onchange="DATA.education[${i}].school=this.value"></div>
+      </div>
+    </div>`).join('');
+}
+function addEdu(){ DATA.education.push({year:'',degree:'New Degree',school:'',credits:''}); renderEduAdmin(); }
+function deleteEdu(i){ DATA.education.splice(i,1); renderEduAdmin(); }
+
+// Courses Admin
+function renderCoursesAdmin(){
+  document.getElementById('courses-admin-list').innerHTML=DATA.courses.map((c,i)=>`
+    <div style="display:flex;gap:0.8rem;margin-bottom:0.8rem;align-items:center;">
+      <input class="admin-input" style="flex:1;" value="${c.name}" onchange="DATA.courses[${i}].name=this.value">
+      <select class="admin-input" style="width:80px;" onchange="DATA.courses[${i}].grade=this.value">${['5','4','3','2','1','P'].map(g=>`<option${c.grade===g?' selected':''}>${g}</option>`).join('')}</select>
+      <button class="btn-delete" onclick="deleteCourse(${i})">✕</button>
+    </div>`).join('');
+}
+function addCourse(){ DATA.courses.push({name:'New Course',grade:'P'}); renderCoursesAdmin(); }
+function deleteCourse(i){ DATA.courses.splice(i,1); renderCoursesAdmin(); }
+
+// Certs Admin
+function renderCertsAdmin(){
+  document.getElementById('certs-admin-list').innerHTML=DATA.certs.map((c,i)=>`
+    <div class="admin-list-item">
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
+        <span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);">${c.name||'Cert '+(i+1)}</span>
+        <div style="display:flex;gap:0.8rem;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);cursor:pointer;"><input type="checkbox" ${c.featured?'checked':''} onchange="DATA.certs[${i}].featured=this.checked"> Featured</label>
+          <button class="btn-delete" onclick="deleteCert(${i})">✕</button>
+        </div>
+      </div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Icon</label><input class="admin-input" value="${c.icon}" onchange="DATA.certs[${i}].icon=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Issuer</label><input class="admin-input" value="${c.issuer}" onchange="DATA.certs[${i}].issuer=this.value"></div>
+      </div>
+      <div class="admin-field"><label class="admin-label">Name</label><input class="admin-input" value="${c.name}" onchange="DATA.certs[${i}].name=this.value"></div>
+      <div class="admin-grid-2">
+        <div class="admin-field"><label class="admin-label">Date</label><input class="admin-input" value="${c.date||''}" onchange="DATA.certs[${i}].date=this.value"></div>
+        <div class="admin-field"><label class="admin-label">Subtitle (featured only)</label><input class="admin-input" value="${c.sub||''}" onchange="DATA.certs[${i}].sub=this.value"></div>
+      </div>
+    </div>`).join('');
+}
+function addCert(){ DATA.certs.push({icon:'🏅',name:'New Certificate',issuer:'',date:'',featured:false,sub:''}); renderCertsAdmin(); }
+function deleteCert(i){ DATA.certs.splice(i,1); renderCertsAdmin(); }
+
+// Photo
+function handlePhotoUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ DATA.about.photo=ev.target.result; const p=document.getElementById('photo-preview'); p.src=ev.target.result; p.style.display='block'; };
+  reader.readAsDataURL(file);
+}
+
+// SAVE ALL
+async function saveAll(){
+  // Collect form values
+  DATA.hero={firstName:gv('a-first-name'),lastName:gv('a-last-name'),statusTag:gv('a-status-tag'),desc:gv('a-hero-desc'),stats:Array.from({length:4},(_,i)=>({num:gv(`a-stat${i+1}-num`),label:gv(`a-stat${i+1}-label`)}))};
+  DATA.about.locationBadge=gv('a-location-badge'); DATA.about.subtitle=gv('a-about-subtitle'); DATA.about.p1=gv('a-about-p1'); DATA.about.p2=gv('a-about-p2');
+  DATA.about.info=Array.from({length:4},(_,i)=>({label:gv(`a-info${i+1}-label`),val:gv(`a-info${i+1}-val`)}));
+  DATA.contact={heading:gv('a-contact-heading'),desc:gv('a-contact-desc'),email:gv('a-email'),phone:gv('a-phone'),linkedin:gv('a-linkedin'),github:gv('a-github')};
+  DATA.settings={siteTitle:gv('a-site-title'),footerLeft:gv('a-footer-left'),footerRight:gv('a-footer-right')};
+
+  // Save to Firebase
+  const btn=document.getElementById('main-save-btn'); const btn2=document.getElementById('save-bar-btn');
+  btn.disabled=true; btn2.disabled=true; btn.textContent='Saving...'; btn2.textContent='Saving...';
+  showSync('saving','Saving to Firebase...');
+
+  let saved=false;
+  if(firebaseAvailable && window.__saveToFirestore){
+    saved = await window.__saveToFirestore(DATA);
+  }
+
+  btn.disabled=false; btn2.disabled=false; btn.textContent='Save to Firebase →'; btn2.textContent='Save to Firebase →';
+
+  if(saved){
+    showSync('synced','✓ Saved to Firebase');
+    document.getElementById('save-status').innerHTML='<span class="save-success">✓ Saved to Firebase at '+new Date().toLocaleTimeString()+' — visible worldwide</span>';
+    showToast('✓ Saved to Firebase! All visitors will see your changes.');
+  } else {
+    showSync('error','Save failed');
+    document.getElementById('save-status').innerHTML='<span class="save-error">⚠ Firebase not configured — add your Firebase config to the HTML file</span>';
+    showToast('⚠ Firebase not set up. Paste your firebaseConfig in the HTML file.', true);
+  }
+  renderAll();
+}
+
+// Password
+async function changePassword(){
+  const cur=gv('a-pw-current'), nw=gv('a-pw-new');
+  if(!cur||!nw){ showToast('Fill both fields.', true); return; }
+  if(cur!==DATA.password){ showToast('Current password wrong.', true); return; }
+  if(nw.length<6){ showToast('Min 6 characters.', true); return; }
+  DATA.password=nw;
+  if(firebaseAvailable && window.__saveToFirestore) await window.__saveToFirestore(DATA);
+  document.getElementById('a-pw-current').value=''; document.getElementById('a-pw-new').value='';
+  showToast('✓ Password updated in Firebase!');
+}
+
+// Export/Import/Reset
+function exportData(){ const b=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='portfolio_backup_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); showToast('✓ Backup exported!'); }
+function importData(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ try{ DATA=JSON.parse(ev.target.result); populateAdminFields(); renderAll(); showToast('✓ Data imported! Click Save to push to Firebase.'); }catch{ showToast('Invalid JSON.', true); } }; r.readAsText(f); }
+async function resetData(){ DATA=JSON.parse(JSON.stringify(DEFAULT_DATA)); if(firebaseAvailable && window.__saveToFirestore) await window.__saveToFirestore(DATA); populateAdminFields(); renderAll(); showToast('✓ Reset to defaults and saved.'); }
+
+// Toast
+function showToast(msg, isError=false){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(isError?' error-toast':''); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4000); }
+
+// ===================== CANVAS BG =====================
+function initCanvas(){
+  const canvas=document.getElementById('bg-canvas'); const ctx=canvas.getContext('2d');
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  resize(); window.addEventListener('resize',resize);
+  const pts=[]; for(let i=0;i<80;i++) pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,z:Math.random()*400+50,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,vz:(Math.random()-.5)*.5,size:Math.random()*2+.5,sx:0,sy:0});
+  let mx=window.innerWidth/2,my=window.innerHeight/2;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p=>{ p.x+=p.vx+(mx-canvas.width/2)*.00005; p.y+=p.vy+(my-canvas.height/2)*.00005; p.z+=p.vz; if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0; if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0; if(p.z<50)p.z=450; if(p.z>450)p.z=50; const sc=300/p.z; p.sx=(p.x-canvas.width/2)*sc+canvas.width/2; p.sy=(p.y-canvas.height/2)*sc+canvas.height/2; const a=(1-p.z/500)*.8; ctx.beginPath(); ctx.arc(p.sx,p.sy,Math.max(.3,p.size*sc),0,Math.PI*2); ctx.fillStyle=`rgba(0,229,160,${a})`; ctx.fill(); });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){ const a=pts[i],b=pts[j],dx=a.sx-b.sx,dy=a.sy-b.sy,d=Math.sqrt(dx*dx+dy*dy); if(d<100){ ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.strokeStyle=`rgba(0,229,160,${(1-d/100)*.12})`;ctx.lineWidth=.5;ctx.stroke(); } }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ===================== CURSOR =====================
+function initCursor(){
+  const c=document.getElementById('cursor'),r=document.getElementById('cursor-ring'); let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;c.style.left=mx+'px';c.style.top=my+'px';});
+  function anim(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; r.style.left=rx+'px'; r.style.top=ry+'px'; requestAnimationFrame(anim); }
+  anim();
+  document.addEventListener('mouseover',e=>{ if(e.target.closest('a,button,.skill-card,.cert-card')){ c.style.transform='translate(-50%,-50%) scale(2)'; r.style.opacity='1'; } });
+  document.addEventListener('mouseout',e=>{ if(e.target.closest('a,button,.skill-card,.cert-card')){ c.style.transform='translate(-50%,-50%) scale(1)'; r.style.opacity='.5'; } });
+}
+
+// ===================== OBSERVER & TILT =====================
+function initObserver(){
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }),{threshold:.1,rootMargin:'0px 0px -50px 0px'});
+  document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+}
+function initTilt(){
+  document.querySelectorAll('[data-tilt]').forEach(card=>{
+    card.addEventListener('mousemove',e=>{ const r=card.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2; card.style.transform=`perspective(600px) rotateY(${((e.clientX-cx)/(r.width/2))*8}deg) rotateX(${-((e.clientY-cy)/(r.height/2))*8}deg) translateY(-4px)`; });
+    card.addEventListener('mouseleave',()=>card.style.transform='');
   });
+}
 </script>
 </body>
 </html>
