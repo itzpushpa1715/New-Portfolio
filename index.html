@@ -5,28 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pushpa Koirala — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<!-- EmailJS — sends form submissions to pushpakoirala.work@gmail.com -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
   (function(){
-    // EmailJS public key — sign up at emailjs.com and replace this
-    // After signing up: Services → Add Gmail → Templates → create template
-    // Then paste your Public Key, Service ID, and Template ID below
-    emailjs.init({
-      publicKey: "_ebZTBbAabfJimhrO",
-    });
+    emailjs.init({ publicKey: "_ebZTBbAabfJimhrO" });
   })();
 </script>
 
-<!-- ============================================================
-     FIREBASE SETUP — REPLACE THIS BLOCK WITH YOUR OWN CONFIG
-     Get it from: Firebase Console → Project Settings → Your apps
-     ============================================================ -->
+<!-- FIREBASE — ES Module -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, enableNetwork, disableNetwork } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ✅ Pushpa Koirala — Firebase config (pushpa-portfolio-ab053)
   const firebaseConfig = {
     apiKey: "AIzaSyAWidrtot8ASzs5Khc_o9_Eu1xo9Cwj1cg",
     authDomain: "pushpa-portfolio-ab053.firebaseapp.com",
@@ -37,88 +27,168 @@
     measurementId: "G-QKVZHSW851"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  // Expose to global scope for use in non-module scripts
-  window.__db = db;
-  window.__firestoreDoc = doc;
-  window.__firestoreGet = getDoc;
-  window.__firestoreSet = setDoc;
+    window.__db = db;
+    window.__firestoreDoc = doc;
+    window.__firestoreGet = getDoc;
+    window.__firestoreSet = setDoc;
 
-  // Load data from Firestore on startup
-  window.__loadFromFirestore = async function() {
-    try {
-      const ref = doc(db, "portfolio", "data");
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        return snap.data();
+    window.__loadFromFirestore = async function() {
+      try {
+        const ref = doc(db, "portfolio", "data");
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          console.log("✅ Firebase: Data loaded successfully");
+          return snap.data();
+        }
+        console.log("ℹ️ Firebase: No data yet — using defaults");
+        return null;
+      } catch(e) {
+        console.error("❌ Firebase load error:", e.code, e.message);
+        // Detailed error hints
+        if(e.code === 'permission-denied') {
+          window.__firebaseError = 'RULES: Firestore security rules are blocking access. Go to Firebase Console → Firestore → Rules and set: allow read, write: if true;';
+        } else if(e.code === 'unavailable') {
+          window.__firebaseError = 'OFFLINE: Firebase could not connect. Check your internet connection.';
+        } else if(e.code === 'not-found') {
+          window.__firebaseError = 'PROJECT: Firestore database not created yet. Go to Firebase Console → Firestore Database → Create database.';
+        } else {
+          window.__firebaseError = e.message;
+        }
+        throw e;
       }
-      return null;
-    } catch(e) {
-      console.warn("Firestore load failed, using defaults:", e);
-      return null;
-    }
-  };
+    };
 
-  // Save data to Firestore
-  window.__saveToFirestore = async function(data) {
-    try {
-      const ref = doc(db, "portfolio", "data");
-      await setDoc(ref, data);
-      return true;
-    } catch(e) {
-      console.error("Firestore save failed:", e);
-      return false;
-    }
-  };
+    window.__saveToFirestore = async function(data) {
+      try {
+        const ref = doc(db, "portfolio", "data");
+        await setDoc(ref, data);
+        console.log("✅ Firebase: Data saved successfully");
+        return true;
+      } catch(e) {
+        console.error("❌ Firebase save error:", e.code, e.message);
+        if(e.code === 'permission-denied') {
+          window.__firebaseError = 'RULES: Firestore rules are blocking writes. Fix rules in Firebase Console → Firestore → Rules.';
+        }
+        return false;
+      }
+    };
 
-  // Signal that Firebase is ready
-  window.__firebaseReady = true;
-  window.dispatchEvent(new Event('firebase-ready'));
+    window.__firebaseReady = true;
+    window.dispatchEvent(new CustomEvent('firebase-ready'));
+  } catch(e) {
+    console.error("❌ Firebase init failed:", e);
+    window.__firebaseError = 'INIT: Firebase initialization failed: ' + e.message;
+    window.__firebaseReady = false;
+    window.dispatchEvent(new CustomEvent('firebase-ready'));
+  }
 </script>
 
 <style>
-:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--accent:#00e5a0;--accent2:#7c3aed;--accent3:#f59e0b;--text:#e8e8f0;--muted:#6b6b8a;--border:rgba(255,255,255,0.08);--danger:#e24b4a;}
-*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
-body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;}
-.cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.1s;mix-blend-mode:screen;}
-.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid var(--accent);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all 0.15s ease;opacity:0.5;}
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5;}
+/* ===================== CSS VARIABLES ===================== */
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;
+  --accent:#00e5a0;--accent2:#7c3aed;--accent3:#f59e0b;
+  --text:#e8e8f0;--muted:#6b6b8a;--border:rgba(255,255,255,0.08);
+  --danger:#e24b4a;--nav-bg:rgba(10,10,15,0.85);
+  /* Dark mode cursor */
+  --cursor-color:#00e5a0;--cursor-ring-color:#00e5a0;--cursor-mix:screen;
+}
+[data-theme="light"]{
+  --bg:#f0f2f5;--surface:#ffffff;--surface2:#e8ebf0;
+  --text:#0d0d14;--muted:#5a6478;--border:rgba(0,0,0,0.1);
+  --nav-bg:rgba(240,242,245,0.92);
+  /* Light mode cursor — purple/violet */
+  --cursor-color:#7c3aed;--cursor-ring-color:#7c3aed;--cursor-mix:multiply;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;transition:background 0.35s,color 0.35s;}
 
-/* LOADING SCREEN */
+/* ===================== CUSTOM CURSOR ===================== */
+.cursor{
+  position:fixed;width:10px;height:10px;
+  background:var(--cursor-color);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:transform 0.08s,background 0.3s;
+  mix-blend-mode:var(--cursor-mix);
+}
+.cursor-ring{
+  position:fixed;width:34px;height:34px;
+  border:1.5px solid var(--cursor-ring-color);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:all 0.14s ease, border-color 0.3s;
+  opacity:0.6;
+}
+/* Light mode cursor gets a filled cross-hair center */
+[data-theme="light"] .cursor{
+  background:var(--cursor-color);
+  box-shadow:0 0 8px rgba(124,58,237,0.6);
+}
+[data-theme="light"] .cursor-ring{
+  border-color:var(--cursor-ring-color);
+  box-shadow:0 0 12px rgba(124,58,237,0.2);
+}
+/* Dark mode cursor glow */
+[data-theme="dark"] .cursor,
+:root .cursor{
+  box-shadow:0 0 8px rgba(0,229,160,0.5);
+}
+
+/* ===================== CANVAS ===================== */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+:root #bg-canvas{opacity:0.45;}
+[data-theme="light"] #bg-canvas{opacity:0.65;}
+
+/* ===================== LOADING ===================== */
 #loading-screen{position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;}
 #loading-screen.hidden{opacity:0;pointer-events:none;}
 .loading-logo{font-family:'Space Mono',monospace;font-size:2rem;color:var(--accent);letter-spacing:0.2em;margin-bottom:2rem;animation:pulse 1.5s infinite;}
-.loading-bar-wrap{width:200px;height:2px;background:var(--surface2);}
-.loading-bar{height:100%;background:var(--accent);width:0%;transition:width 0.3s;}
-.loading-status{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.2em;margin-top:1rem;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.loading-bar-wrap{width:220px;height:2px;background:var(--surface2);}
+.loading-bar{height:100%;background:var(--accent);width:0%;transition:width 0.4s ease;}
+.loading-status{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;margin-top:1rem;text-align:center;max-width:300px;}
+.loading-error-hint{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--danger);margin-top:0.5rem;text-align:center;max-width:360px;line-height:1.6;padding:0 1rem;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 
-/* SYNC INDICATOR */
-.sync-indicator{position:fixed;bottom:1.5rem;left:1.5rem;z-index:300;font-family:'Space Mono',monospace;font-size:0.65rem;display:flex;align-items:center;gap:0.5rem;opacity:0;transition:opacity 0.3s;}
+/* ===================== SYNC ===================== */
+.sync-indicator{position:fixed;bottom:1.5rem;left:1.5rem;z-index:300;font-family:'Space Mono',monospace;font-size:0.62rem;display:flex;align-items:center;gap:0.5rem;opacity:0;transition:opacity 0.3s;background:var(--surface);border:1px solid var(--border);padding:0.4rem 0.8rem;}
 .sync-indicator.show{opacity:1;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
 .sync-dot.saving{background:var(--accent3);animation:blink 0.5s infinite;}
 .sync-dot.error{background:var(--danger);}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-/* NAV */
-nav{position:fixed;top:0;width:100%;z-index:200;padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+/* ===================== NAV ===================== */
+nav{position:fixed;top:0;width:100%;z-index:200;padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:background 0.3s;}
 .nav-logo{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);letter-spacing:0.1em;}
 .nav-links{display:flex;gap:2rem;align-items:center;}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
 .nav-links a:hover{color:var(--accent);}
-.admin-btn{font-family:'Space Mono',monospace;font-size:0.7rem;padding:0.5rem 1rem;border:1px solid var(--border);color:var(--muted);background:none;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;}
-.admin-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-controls{display:flex;align-items:center;gap:0.6rem;}
+.ctrl-btn{width:36px;height:36px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;border-radius:2px;}
+.ctrl-btn:hover{border-color:var(--accent);color:var(--accent);}
+.lang-btn{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:0 0.6rem;width:auto;min-width:44px;}
+.firebase-status-nav{font-family:'Space Mono',monospace;font-size:0.6rem;display:flex;align-items:center;gap:0.4rem;padding:0.3rem 0.6rem;border:1px solid var(--border);color:var(--muted);}
+.fbn-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);}
+.fbn-dot.connected{background:var(--accent);box-shadow:0 0 4px rgba(0,229,160,0.5);}
+.fbn-dot.error{background:var(--danger);}
 
-section{max-width:1200px;margin:0 auto;padding:8rem 3rem 5rem;}
+/* ===================== SECTIONS ===================== */
+section{max-width:1200px;margin:0 auto;padding:8rem 3rem 5rem;position:relative;z-index:1;}
 #hero{display:flex;align-items:center;min-height:100vh;padding:0 6rem;max-width:none;position:relative;}
+
+/* ===================== HERO ===================== */
 .hero-tag{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;}
 .hero-tag::before{content:'';display:block;width:40px;height:1px;background:var(--accent);}
 h1{font-size:clamp(3.5rem,8vw,7rem);font-weight:800;line-height:0.95;letter-spacing:-0.03em;margin-bottom:0.5rem;}
 .hero-name{color:var(--text);}
 .hero-role{color:transparent;-webkit-text-stroke:1px var(--accent);display:block;}
+[data-theme="light"] .hero-role{-webkit-text-stroke:2px var(--accent);}
 .hero-desc{margin-top:2rem;font-size:1.05rem;color:var(--muted);max-width:500px;line-height:1.7;}
 .hero-ctas{margin-top:3rem;display:flex;gap:1.5rem;flex-wrap:wrap;}
 .btn-primary{padding:0.85rem 2rem;background:var(--accent);color:#0a0a0f;font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);border:none;cursor:pointer;display:inline-block;}
@@ -133,38 +203,49 @@ h1{font-size:clamp(3.5rem,8vw,7rem);font-weight:800;line-height:0.95;letter-spac
 .scroll-line::after{content:'';position:absolute;left:-100%;top:0;width:100%;height:100%;background:var(--accent);animation:scrollAnim 2s infinite;}
 @keyframes scrollAnim{0%{left:-100%}100%{left:100%}}
 
+/* ===================== SECTION HEADERS ===================== */
 .section-header{margin-bottom:4rem;}
 .section-tag{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:1rem;}
 h2{font-size:clamp(2.5rem,5vw,4rem);font-weight:800;letter-spacing:-0.03em;line-height:1;}
 h2 span{color:transparent;-webkit-text-stroke:1px var(--muted);}
+[data-theme="light"] h2 span{-webkit-text-stroke:1px #aaa;}
 
+/* ===================== ABOUT ===================== */
 .about-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:5rem;align-items:start;}
-.about-photo-frame{width:100%;aspect-ratio:3/4;background:var(--surface2);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.about-photo-frame{width:100%;aspect-ratio:3/4;background:var(--surface2);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:box-shadow 0.3s;}
+[data-theme="light"] .about-photo-frame{box-shadow:8px 8px 0 var(--accent),16px 16px 0 rgba(124,58,237,0.2);}
 .about-photo-frame::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,160,0.05) 0%,transparent 60%);z-index:1;pointer-events:none;}
 .photo-initials{font-size:6rem;font-weight:800;color:var(--accent);opacity:0.2;font-family:'Space Mono',monospace;}
 .about-badge{position:absolute;bottom:-1rem;right:-1rem;background:var(--accent);color:#0a0a0f;padding:1rem 1.5rem;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;}
 .about-corner{position:absolute;top:-1rem;left:-1rem;width:60px;height:60px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);}
 .about-text p{color:var(--muted);line-height:1.8;margin-bottom:1.5rem;font-size:0.95rem;}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem;}
-.info-item{border:1px solid var(--border);padding:1rem;background:var(--surface);}
+.info-item{border:1px solid var(--border);padding:1rem;background:var(--surface);transition:box-shadow 0.3s;}
+[data-theme="light"] .info-item{box-shadow:3px 3px 0 var(--border);}
 .info-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.3rem;}
 .info-val{font-size:0.9rem;color:var(--text);}
 
+/* ===================== SKILLS ===================== */
 .skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;}
-.skill-card{background:var(--surface);border:1px solid var(--border);padding:2rem;position:relative;overflow:hidden;transition:border-color 0.3s,transform 0.3s;}
+.skill-card{background:var(--surface);border:1px solid var(--border);padding:2rem;position:relative;overflow:hidden;transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;}
 .skill-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
 .skill-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-4px);}
 .skill-card:hover::before{transform:scaleX(1);}
+[data-theme="light"] .skill-card{box-shadow:4px 4px 0 var(--border);}
+[data-theme="light"] .skill-card:hover{box-shadow:8px 8px 0 rgba(0,229,160,0.15),4px 4px 0 var(--border);}
 .skill-icon{width:48px;height:48px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1.5rem;border:1px solid var(--border);}
 .skill-title{font-size:1rem;font-weight:700;margin-bottom:1rem;}
 .skill-tags{display:flex;flex-wrap:wrap;gap:0.5rem;}
 .tag{font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.6rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
 .tag.accent{background:rgba(0,229,160,0.1);color:var(--accent);border-color:rgba(0,229,160,0.3);}
 
+/* ===================== EXPERIENCE ===================== */
 .exp-timeline{position:relative;padding-left:2rem;}
 .exp-timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border);}
-.exp-item{position:relative;margin-bottom:2rem;padding:2rem;background:var(--surface);border:1px solid var(--border);margin-left:2rem;transition:border-color 0.3s;}
+.exp-item{position:relative;margin-bottom:2rem;padding:2rem;background:var(--surface);border:1px solid var(--border);margin-left:2rem;transition:border-color 0.3s,box-shadow 0.3s;}
 .exp-item:hover{border-color:rgba(0,229,160,0.3);}
+[data-theme="light"] .exp-item{box-shadow:4px 4px 0 var(--border);}
+[data-theme="light"] .exp-item:hover{box-shadow:6px 6px 0 rgba(0,229,160,0.15);}
 .exp-item::before{content:'';position:absolute;left:-3rem;top:2rem;width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 4px var(--bg),0 0 0 5px var(--accent);}
 .exp-period{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.5rem;}
 .exp-role{font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;}
@@ -173,14 +254,15 @@ h2 span{color:transparent;-webkit-text-stroke:1px var(--muted);}
 .exp-bullets li{font-size:0.85rem;color:var(--muted);padding:0.3rem 0 0.3rem 1rem;position:relative;line-height:1.5;}
 .exp-bullets li::before{content:'›';position:absolute;left:0;color:var(--accent);}
 
+/* ===================== EDUCATION ===================== */
 .edu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:3rem;}
-.edu-card{background:var(--surface);border:1px solid var(--border);padding:2rem;transition:border-color 0.3s;}
+.edu-card{background:var(--surface);border:1px solid var(--border);padding:2rem;transition:border-color 0.3s,box-shadow 0.3s;}
 .edu-card:hover{border-color:rgba(124,58,237,0.4);}
+[data-theme="light"] .edu-card{box-shadow:4px 4px 0 var(--border);}
 .edu-year{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent2);letter-spacing:0.1em;margin-bottom:0.8rem;}
 .edu-degree{font-size:1rem;font-weight:700;margin-bottom:0.3rem;}
 .edu-school{font-size:0.85rem;color:var(--muted);margin-bottom:1rem;}
 .edu-credits{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);background:rgba(0,229,160,0.1);padding:0.4rem 0.8rem;display:inline-block;border:1px solid rgba(0,229,160,0.2);}
-
 .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.8rem;}
 .course-item{background:var(--surface);border:1px solid var(--border);padding:0.8rem 1rem;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;font-size:0.82rem;}
 .course-item:hover{border-color:rgba(0,229,160,0.3);}
@@ -191,22 +273,27 @@ h2 span{color:transparent;-webkit-text-stroke:1px var(--muted);}
 .grade-1{color:#6b6b8a;background:rgba(107,107,138,0.1);}
 .grade-p{color:#7c3aed;background:rgba(124,58,237,0.1);}
 
+/* ===================== CERTS ===================== */
 .certs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;}
 .cert-card{background:var(--surface);border:1px solid var(--border);padding:1.5rem;position:relative;overflow:hidden;transition:all 0.3s;}
 .cert-card:hover{border-color:rgba(245,158,11,0.4);transform:translateY(-3px);}
+[data-theme="light"] .cert-card{box-shadow:3px 3px 0 var(--border);}
 .cert-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent3);}
 .cert-icon{font-size:1.5rem;margin-bottom:0.8rem;}
 .cert-name{font-size:0.9rem;font-weight:700;line-height:1.3;}
 .cert-issuer{font-size:0.75rem;color:var(--muted);margin-top:0.3rem;}
-.cert-featured-wrap{background:var(--surface);border:1px solid rgba(0,229,160,0.3);padding:2rem;position:relative;margin-bottom:1rem;display:flex;align-items:center;gap:2rem;}
+.cert-featured-wrap{background:var(--surface);border:1px solid rgba(0,229,160,0.3);padding:2rem;position:relative;margin-bottom:1rem;display:flex;align-items:center;gap:2rem;transition:box-shadow 0.3s;}
+[data-theme="light"] .cert-featured-wrap{box-shadow:5px 5px 0 rgba(0,229,160,0.15);}
 .cert-featured-label{position:absolute;top:1rem;right:1rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent);letter-spacing:0.2em;padding:0.3rem 0.6rem;border:1px solid rgba(0,229,160,0.3);}
 .cert-featured-title{font-size:1rem;font-weight:700;margin-bottom:0.3rem;}
 .cert-featured-sub{font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem;}
 .cert-featured-date{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent3);}
 
+/* ===================== CONTACT ===================== */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;}
 .contact-link{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;background:var(--surface);border:1px solid var(--border);text-decoration:none;color:var(--text);transition:all 0.2s;margin-bottom:1rem;}
 .contact-link:hover{border-color:var(--accent);color:var(--accent);}
+[data-theme="light"] .contact-link{box-shadow:3px 3px 0 var(--border);}
 .contact-link-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);margin-left:auto;text-transform:uppercase;letter-spacing:0.1em;}
 .contact-form-wrap{display:flex;flex-direction:column;gap:1rem;}
 .form-group{display:flex;flex-direction:column;gap:0.4rem;}
@@ -215,15 +302,54 @@ h2 span{color:transparent;-webkit-text-stroke:1px var(--muted);}
 .form-group input:focus,.form-group textarea:focus{border-color:var(--accent);}
 .form-group textarea{min-height:120px;}
 
+/* ===================== FOOTER ===================== */
 footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .footer-text{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);}
 .footer-text span{color:var(--accent);}
 
+/* ===================== ANIMATIONS ===================== */
 .fade-up{opacity:0;transform:translateY(40px);transition:opacity 0.8s ease,transform 0.8s ease;}
 .fade-up.visible{opacity:1;transform:translateY(0);}
 
-/* ===== ADMIN ===== */
-#admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;overflow-y:auto;backdrop-filter:blur(8px);}
+/* ===================== CHATBOT ===================== */
+#chat-bubble{position:fixed;bottom:2rem;right:2rem;z-index:500;width:52px;height:52px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all 0.3s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);box-shadow:0 4px 20px rgba(0,229,160,0.35);}
+#chat-bubble:hover{transform:scale(1.08);background:#fff;}
+#chat-window{position:fixed;bottom:5.5rem;right:2rem;z-index:500;width:360px;max-height:520px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;transform:scale(0.9) translateY(20px);transform-origin:bottom right;opacity:0;pointer-events:none;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+#chat-window.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+.chat-header{padding:1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+.chat-title{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.1em;}
+.chat-status{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted);display:flex;align-items:center;gap:0.4rem;}
+.chat-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite;}
+.chat-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;transition:color 0.2s;line-height:1;}
+.chat-close:hover{color:var(--danger);}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.8rem;min-height:200px;max-height:340px;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.chat-msg{max-width:85%;padding:0.7rem 1rem;font-size:0.82rem;line-height:1.5;}
+.chat-msg.bot{background:var(--surface2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:0 8px 8px 8px;}
+.chat-msg.user{background:var(--accent);color:#0a0a0f;align-self:flex-end;border-radius:8px 0 8px 8px;font-weight:600;}
+.chat-msg.typing{opacity:0.6;}
+.chat-typing-dots{display:flex;gap:4px;padding:4px 0;}
+.chat-typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:typingDot 1.2s infinite;}
+.chat-typing-dots span:nth-child(2){animation-delay:0.2s;}
+.chat-typing-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes typingDot{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+.chat-input-row{display:flex;border-top:1px solid var(--border);}
+.chat-input-row input{flex:1;background:none;border:none;color:var(--text);padding:0.9rem 1rem;font-family:'Syne',sans-serif;font-size:0.85rem;outline:none;}
+.chat-input-row input::placeholder{color:var(--muted);}
+.chat-send{background:none;border:none;border-left:1px solid var(--border);color:var(--muted);padding:0 1rem;cursor:pointer;font-size:1rem;transition:all 0.2s;}
+.chat-send:hover{color:var(--accent);}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.6rem 1rem;border-top:1px solid var(--border);}
+.chat-sugg{font-family:'Space Mono',monospace;font-size:0.6rem;padding:0.3rem 0.6rem;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;}
+.chat-sugg:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ===================== TOAST ===================== */
+.toast{position:fixed;bottom:2rem;right:6rem;background:var(--surface);border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.75rem;padding:1rem 1.5rem;z-index:5000;letter-spacing:0.05em;transform:translateY(100px);transition:transform 0.3s;}
+.toast.show{transform:translateY(0);}
+.toast.error-toast{border-color:var(--danger);color:var(--danger);}
+
+/* ===================== ADMIN ===================== */
+#admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000;overflow-y:auto;backdrop-filter:blur(8px);}
 #admin-overlay.show{display:flex;}
 .admin-container{width:100%;max-width:980px;margin:auto;padding:2rem;}
 .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
@@ -257,6 +383,12 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 .save-hint{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);}
 .save-success{color:var(--accent);}
 .save-error{color:var(--danger);}
+.firebase-alert{background:rgba(226,75,74,0.1);border:1px solid var(--danger);padding:1rem 1.2rem;margin-bottom:1.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--danger);line-height:1.7;display:none;}
+.firebase-alert.show{display:block;}
+.firebase-ok{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.3);padding:0.8rem 1.2rem;margin-bottom:1.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);display:none;}
+.firebase-ok.show{display:block;}
+.firebase-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent3);border:1px solid rgba(245,158,11,0.3);padding:0.3rem 0.8rem;margin-left:1rem;}
+.firebase-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);}
 
 #login-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
 #login-modal.show{display:flex;}
@@ -270,13 +402,6 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 .img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 .img-upload-label{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;}
 
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface);border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.75rem;padding:1rem 1.5rem;z-index:5000;letter-spacing:0.05em;transform:translateY(100px);transition:transform 0.3s;}
-.toast.show{transform:translateY(0);}
-.toast.error-toast{border-color:var(--danger);color:var(--danger);}
-
-.firebase-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent3);border:1px solid rgba(245,158,11,0.3);padding:0.3rem 0.8rem;margin-left:1rem;}
-.firebase-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);}
-
 @media(max-width:768px){
   nav{padding:1rem 1.5rem;}
   .nav-links{display:none;}
@@ -287,16 +412,18 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
   footer{flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
   .scroll-hint{display:none;}
   .admin-grid-2{grid-template-columns:1fr;}
+  .firebase-status-nav{display:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- LOADING SCREEN -->
+<!-- LOADING -->
 <div id="loading-screen">
   <div class="loading-logo">PK_</div>
   <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
-  <div class="loading-status" id="loading-status">Connecting to Firebase...</div>
+  <div class="loading-status" id="loading-status">Initializing...</div>
+  <div class="loading-error-hint" id="loading-error-hint"></div>
 </div>
 
 <canvas id="bg-canvas"></canvas>
@@ -304,7 +431,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 <div class="cursor-ring" id="cursor-ring"></div>
 <div class="toast" id="toast"></div>
 
-<!-- SYNC INDICATOR -->
+<!-- SYNC -->
 <div class="sync-indicator" id="sync-indicator">
   <div class="sync-dot" id="sync-dot"></div>
   <span id="sync-text">Synced</span>
@@ -331,15 +458,19 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 <div id="admin-overlay">
   <div class="admin-container">
     <div class="admin-header">
-      <div style="display:flex;align-items:center;">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;">
         <div class="admin-title">// Admin Panel</div>
-        <div class="firebase-badge"><div class="firebase-dot"></div>Firebase Live</div>
+        <div class="firebase-badge" id="fb-badge"><div class="firebase-dot"></div><span id="fb-badge-text">Connecting...</span></div>
       </div>
       <div style="display:flex;gap:1rem;align-items:center;">
         <button class="btn-save-all" id="main-save-btn" onclick="saveAll()">Save to Firebase →</button>
         <button class="admin-close" onclick="closeAdmin()">✕ Close</button>
       </div>
     </div>
+
+    <!-- Firebase status alerts -->
+    <div class="firebase-alert" id="fb-alert"></div>
+    <div class="firebase-ok" id="fb-ok">✓ Firebase connected — changes will be visible to all visitors worldwide.</div>
 
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchTab('hero')">Hero</button>
@@ -353,7 +484,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       <button class="admin-tab" onclick="switchTab('settings')">Settings</button>
     </div>
 
-    <!-- HERO -->
+    <!-- HERO TAB -->
     <div class="admin-panel active" id="tab-hero">
       <div class="admin-section-title">Hero Section</div>
       <div class="admin-grid-2">
@@ -362,7 +493,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       </div>
       <div class="admin-field"><label class="admin-label">Status Tag</label><input class="admin-input" id="a-status-tag"></div>
       <div class="admin-field"><label class="admin-label">Short Description</label><textarea class="admin-textarea" id="a-hero-desc"></textarea></div>
-      <div class="admin-section-title" style="margin-top:1.5rem;">Stats (4 boxes)</div>
+      <div class="admin-section-title" style="margin-top:1.5rem;">Stats</div>
       <div class="admin-grid-2">
         <div class="admin-field"><label class="admin-label">Stat 1 Number</label><input class="admin-input" id="a-stat1-num"></div>
         <div class="admin-field"><label class="admin-label">Stat 1 Label</label><input class="admin-input" id="a-stat1-label"></div>
@@ -375,17 +506,17 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       </div>
     </div>
 
-    <!-- ABOUT -->
+    <!-- ABOUT TAB -->
     <div class="admin-panel" id="tab-about">
       <div class="admin-section-title">About Section</div>
       <div class="admin-field">
         <label class="admin-label">Profile Photo</label>
         <div class="img-upload-area">
           <input type="file" accept="image/*" onchange="handlePhotoUpload(event)">
-          <div class="img-upload-label">Click to upload photo (JPG, PNG — stored as base64)</div>
+          <div class="img-upload-label">Click to upload photo (resize to under 400KB first)</div>
           <img id="photo-preview" style="max-width:100%;max-height:180px;display:none;margin-top:1rem;object-fit:cover;">
         </div>
-        <div class="admin-hint" style="margin-top:0.5rem;">⚠ Large images may exceed Firestore's 1MB limit. Resize to under 400KB before uploading.</div>
+        <div class="admin-hint" style="margin-top:0.5rem;">⚠ Firestore limit is 1MB per document. Keep images small.</div>
       </div>
       <div class="admin-grid-2">
         <div class="admin-field"><label class="admin-label">Location Badge</label><input class="admin-input" id="a-location-badge"></div>
@@ -393,7 +524,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       </div>
       <div class="admin-field"><label class="admin-label">Paragraph 1</label><textarea class="admin-textarea" id="a-about-p1"></textarea></div>
       <div class="admin-field"><label class="admin-label">Paragraph 2</label><textarea class="admin-textarea" id="a-about-p2"></textarea></div>
-      <div class="admin-section-title" style="margin-top:2rem;">Info Grid (4 items)</div>
+      <div class="admin-section-title" style="margin-top:2rem;">Info Grid</div>
       <div class="admin-grid-2">
         <div class="admin-field"><label class="admin-label">Label 1</label><input class="admin-input" id="a-info1-label"></div>
         <div class="admin-field"><label class="admin-label">Value 1</label><input class="admin-input" id="a-info1-val"></div>
@@ -406,28 +537,28 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       </div>
     </div>
 
-    <!-- SKILLS -->
+    <!-- SKILLS TAB -->
     <div class="admin-panel" id="tab-skills">
       <div class="admin-section-title">Skill Cards</div>
       <div id="skills-admin-list"></div>
       <button class="btn-add" onclick="addSkill()">+ Add Skill Card</button>
     </div>
 
-    <!-- EXPERIENCE -->
+    <!-- EXPERIENCE TAB -->
     <div class="admin-panel" id="tab-experience">
       <div class="admin-section-title">Work Experience</div>
       <div id="exp-admin-list"></div>
       <button class="btn-add" onclick="addExp()">+ Add Experience</button>
     </div>
 
-    <!-- EDUCATION -->
+    <!-- EDUCATION TAB -->
     <div class="admin-panel" id="tab-education">
       <div class="admin-section-title">Education</div>
       <div id="edu-admin-list"></div>
       <button class="btn-add" onclick="addEdu()">+ Add Education</button>
     </div>
 
-    <!-- COURSES -->
+    <!-- COURSES TAB -->
     <div class="admin-panel" id="tab-courses">
       <div class="admin-section-title">Course Highlights</div>
       <p style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);margin-bottom:1.5rem;">Grade: 5, 4, 3, 2, 1, or P</p>
@@ -435,14 +566,14 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       <button class="btn-add" onclick="addCourse()">+ Add Course</button>
     </div>
 
-    <!-- CERTS -->
+    <!-- CERTS TAB -->
     <div class="admin-panel" id="tab-certs">
       <div class="admin-section-title">Certificates</div>
       <div id="certs-admin-list"></div>
       <button class="btn-add" onclick="addCert()">+ Add Certificate</button>
     </div>
 
-    <!-- CONTACT -->
+    <!-- CONTACT TAB -->
     <div class="admin-panel" id="tab-contact">
       <div class="admin-section-title">Contact Info</div>
       <div class="admin-field"><label class="admin-label">Section Heading</label><input class="admin-input" id="a-contact-heading"></div>
@@ -455,19 +586,41 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
       </div>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- SETTINGS TAB -->
     <div class="admin-panel" id="tab-settings">
       <div class="admin-section-title">Site Settings</div>
       <div class="admin-field"><label class="admin-label">Browser Tab Title</label><input class="admin-input" id="a-site-title"></div>
       <div class="admin-field"><label class="admin-label">Footer Left</label><input class="admin-input" id="a-footer-left"></div>
       <div class="admin-field"><label class="admin-label">Footer Right</label><input class="admin-input" id="a-footer-right"></div>
+
+      <div class="admin-section-title" style="margin-top:2.5rem;">🔥 Firebase Troubleshooting</div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:1.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;line-height:2;color:var(--muted);">
+        <div style="color:var(--accent);margin-bottom:0.8rem;">If Firebase shows "Connection Failed":</div>
+        <div>1. Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent3);">console.firebase.google.com</a></div>
+        <div>2. Select your project: <span style="color:var(--text);">pushpa-portfolio-ab053</span></div>
+        <div>3. Click <span style="color:var(--text);">Firestore Database</span> → <span style="color:var(--text);">Rules</span></div>
+        <div>4. Replace the rules with:</div>
+        <div style="background:var(--surface2);padding:0.8rem;margin:0.5rem 0;color:var(--accent);border-left:2px solid var(--accent);">
+          rules_version = '2';<br>
+          service cloud.firestore {<br>
+          &nbsp;&nbsp;match /databases/{database}/documents {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;match /{document=**} {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if true;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <div>5. Click <span style="color:var(--text);">Publish</span> and wait 30 seconds</div>
+        <div style="margin-top:1rem;color:var(--accent3);">Current error: <span id="fb-error-display">None</span></div>
+      </div>
+
       <div class="admin-section-title" style="margin-top:2.5rem;">Change Admin Password</div>
-      <div class="admin-hint" style="margin-bottom:1rem;">Password is stored in Firebase — shared across all devices.</div>
       <div class="admin-grid-2">
         <div class="admin-field"><label class="admin-label">Current Password</label><input type="password" class="admin-input" id="a-pw-current"></div>
         <div class="admin-field"><label class="admin-label">New Password (min 6 chars)</label><input type="password" class="admin-input" id="a-pw-new"></div>
       </div>
       <button class="btn-add" onclick="changePassword()">Update Password</button>
+
       <div class="admin-section-title" style="margin-top:2.5rem;">Data Management</div>
       <div style="display:flex;gap:1rem;flex-wrap:wrap;">
         <button class="btn-add" onclick="exportData()">⬇ Export JSON Backup</button>
@@ -477,7 +630,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     </div>
 
     <div class="save-bar">
-      <div class="save-hint" id="save-status">All changes save to Firebase — visible to every visitor worldwide</div>
+      <div class="save-hint" id="save-status">Changes save to Firebase — visible worldwide</div>
       <button class="btn-save-all" id="save-bar-btn" onclick="saveAll()">Save to Firebase →</button>
     </div>
   </div>
@@ -488,13 +641,21 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 <nav>
   <div class="nav-logo" id="nav-logo">PK_</div>
   <div class="nav-links">
-    <a href="#about">About</a>
-    <a href="#skills">Skills</a>
-    <a href="#experience">Experience</a>
-    <a href="#education">Education</a>
-    <a href="#certs">Certs</a>
-    <a href="#contact">Contact</a>
-    <button class="admin-btn" onclick="openLogin()">⚙ Admin</button>
+    <a href="#about" data-i18n="nav.about">About</a>
+    <a href="#skills" data-i18n="nav.skills">Skills</a>
+    <a href="#experience" data-i18n="nav.exp">Experience</a>
+    <a href="#education" data-i18n="nav.edu">Education</a>
+    <a href="#certs" data-i18n="nav.certs">Certs</a>
+    <a href="#contact" data-i18n="nav.contact">Contact</a>
+  </div>
+  <div class="nav-controls">
+    <!-- Firebase status dot in nav -->
+    <div class="firebase-status-nav" id="fb-nav-status">
+      <div class="fbn-dot" id="fbn-dot"></div>
+      <span id="fbn-text">Firebase</span>
+    </div>
+    <button class="ctrl-btn lang-btn" id="lang-toggle" onclick="toggleLang()" title="Toggle language">EN</button>
+    <button class="ctrl-btn" id="theme-btn" onclick="cycleTheme()" title="Toggle theme">🌙</button>
   </div>
 </nav>
 
@@ -507,17 +668,17 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     </h1>
     <p class="hero-desc fade-up" id="hero-desc-el"></p>
     <div class="hero-ctas fade-up">
-      <a href="#contact" class="btn-primary">Get in touch →</a>
-      <a href="#experience" class="btn-outline">View work</a>
+      <a href="#contact" class="btn-primary" data-i18n-text="hero.cta1">Get in touch →</a>
+      <a href="#experience" class="btn-outline" data-i18n-text="hero.cta2">View work</a>
     </div>
     <div class="hero-stats fade-up" id="hero-stats-el"></div>
   </div>
-  <div class="scroll-hint"><div class="scroll-line"></div>Scroll to explore</div>
+  <div class="scroll-hint"><div class="scroll-line"></div><span data-i18n-text="scroll">Scroll to explore</span></div>
 </section>
 
 <section id="about">
   <div class="section-header fade-up">
-    <div class="section-tag">01 / About</div>
+    <div class="section-tag" data-i18n-text="s1">01 / About</div>
     <h2>Who I <span>am</span></h2>
   </div>
   <div class="about-grid">
@@ -530,8 +691,10 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     </div>
     <div class="fade-up">
       <h3 style="font-size:1.4rem;margin-bottom:1.2rem;font-weight:700;" id="about-subtitle-el"></h3>
-      <p id="about-p1-el"></p>
-      <p id="about-p2-el"></p>
+      <div class="about-text">
+        <p id="about-p1-el"></p>
+        <p id="about-p2-el"></p>
+      </div>
       <div class="info-grid" id="about-info-grid"></div>
     </div>
   </div>
@@ -539,7 +702,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 
 <section id="skills">
   <div class="section-header fade-up">
-    <div class="section-tag">02 / Skills</div>
+    <div class="section-tag" data-i18n-text="s2">02 / Skills</div>
     <h2>What I <span>know</span></h2>
   </div>
   <div class="skills-grid" id="skills-grid-el"></div>
@@ -547,7 +710,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 
 <section id="experience">
   <div class="section-header fade-up">
-    <div class="section-tag">03 / Experience</div>
+    <div class="section-tag" data-i18n-text="s3">03 / Experience</div>
     <h2>What I've <span>built</span></h2>
   </div>
   <div class="exp-timeline" id="exp-timeline-el"></div>
@@ -555,17 +718,17 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 
 <section id="education">
   <div class="section-header fade-up">
-    <div class="section-tag">04 / Education</div>
+    <div class="section-tag" data-i18n-text="s4">04 / Education</div>
     <h2>How I <span>learn</span></h2>
   </div>
   <div class="edu-grid" id="edu-grid-el"></div>
-  <div class="section-tag fade-up" style="margin-bottom:1.5rem;">Academic Highlights</div>
+  <div class="section-tag fade-up" id="courses-label" style="margin-bottom:1.5rem;">Academic Highlights</div>
   <div class="courses-grid fade-up" id="courses-grid-el"></div>
 </section>
 
 <section id="certs">
   <div class="section-header fade-up">
-    <div class="section-tag">05 / Certifications</div>
+    <div class="section-tag" data-i18n-text="s5">05 / Certifications</div>
     <h2>What I've <span>earned</span></h2>
   </div>
   <div id="certs-container-el"></div>
@@ -573,7 +736,7 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 
 <section id="contact">
   <div class="section-header fade-up">
-    <div class="section-tag">06 / Contact</div>
+    <div class="section-tag" data-i18n-text="s6">06 / Contact</div>
     <h2>Let's <span>connect</span></h2>
   </div>
   <div class="contact-grid">
@@ -585,30 +748,24 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     <div class="fade-up">
       <div class="contact-form-wrap">
         <div class="form-group">
-          <label>Your name</label>
+          <label data-i18n-text="form.name">Your name</label>
           <input type="text" id="form-name" placeholder="Jane Smith">
         </div>
         <div class="form-group">
-          <label>Your email</label>
+          <label data-i18n-text="form.email">Your email</label>
           <input type="email" id="form-email" placeholder="jane@company.com">
         </div>
         <div class="form-group">
-          <label>Subject</label>
-          <input type="text" id="form-subject" placeholder="Job opportunity / Collaboration ...">
+          <label data-i18n-text="form.subject">Subject</label>
+          <input type="text" id="form-subject" placeholder="Job opportunity / Collaboration...">
         </div>
         <div class="form-group">
-          <label>Message</label>
+          <label data-i18n-text="form.msg">Message</label>
           <textarea id="form-message" placeholder="Tell me about the opportunity..." style="min-height:140px;"></textarea>
         </div>
-        <button type="button" class="btn-primary" id="form-send-btn" onclick="sendEmail()" style="width:100%;text-align:center;font-size:0.85rem;">
-          Send message →
-        </button>
-        <div id="form-success" style="display:none;padding:1.2rem;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.05em;">
-          ✓ Message sent! Pushpa will get back to you soon.
-        </div>
-        <div id="form-error" style="display:none;padding:1.2rem;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--danger);letter-spacing:0.05em;">
-          ⚠ Failed to send. Please email directly: <a href="mailto:pushpakoirala.work@gmail.com" style="color:var(--danger);">pushpakoirala.work@gmail.com</a>
-        </div>
+        <button type="button" class="btn-primary" id="form-send-btn" onclick="sendEmail()" style="width:100%;text-align:center;font-size:0.85rem;">Send message →</button>
+        <div id="form-success" style="display:none;padding:1.2rem;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:0.05em;">✓ Message sent! Pushpa will get back to you soon.</div>
+        <div id="form-error" style="display:none;padding:1.2rem;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.3);font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--danger);letter-spacing:0.05em;">⚠ Failed to send. Please email directly: <a href="mailto:pushpakoirala.work@gmail.com" style="color:var(--danger);">pushpakoirala.work@gmail.com</a></div>
       </div>
     </div>
   </div>
@@ -620,8 +777,31 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
 </footer>
 </div>
 
+<!-- CHATBOT -->
+<button id="chat-bubble" onclick="toggleChat()" title="Chat with PK Assistant">💬</button>
+<div id="chat-window">
+  <div class="chat-header">
+    <div class="chat-title">PK Assistant</div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div class="chat-status"><span id="chat-status-text">Online</span></div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-suggestions" id="chat-suggestions" style="display:none;">
+    <button class="chat-sugg" onclick="sendSugg(this)">Who is Pushpa?</button>
+    <button class="chat-sugg" onclick="sendSugg(this)">Skills &amp; tools</button>
+    <button class="chat-sugg" onclick="sendSugg(this)">Work experience</button>
+    <button class="chat-sugg" onclick="sendSugg(this)">Hire / contact</button>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">→</button>
+  </div>
+</div>
+
 <script>
-// ===================== DEFAULT DATA =====================
+// ======================== DEFAULT DATA ========================
 const DEFAULT_DATA = {
   password:"admin123",
   hero:{firstName:"Pushpa",lastName:"Koirala",statusTag:"Available for opportunities",desc:"Automation & Electrical Engineering student at JAMK. Building the intersection of robotics, AI, and industrial systems.",stats:[{num:"118",label:"Credits completed"},{num:"3+",label:"Years experience"},{num:"10+",label:"Certifications"},{num:"5",label:"Physics grade (max)"}]},
@@ -637,32 +817,64 @@ const DEFAULT_DATA = {
 
 let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let firebaseAvailable = false;
+let firebaseError = null;
 
-// ===================== LOADING =====================
-function setLoading(pct, msg){
+// ======================== LOADING ========================
+function setLoading(pct, msg, errHint=''){
   document.getElementById('loading-bar').style.width = pct+'%';
   document.getElementById('loading-status').textContent = msg;
+  const hint = document.getElementById('loading-error-hint');
+  hint.textContent = errHint;
+  hint.style.display = errHint ? 'block' : 'none';
 }
+
 function hideLoading(){
   const s = document.getElementById('loading-screen');
   s.classList.add('hidden');
   setTimeout(()=>s.style.display='none', 600);
 }
 
-// ===================== FIREBASE INIT =====================
+// ======================== FIREBASE INIT ========================
 async function initFirebase(){
-  setLoading(30, 'Connecting to Firebase...');
+  setLoading(20, 'Connecting to Firebase...');
+
   try {
+    if(!window.__loadFromFirestore) throw new Error('Firebase module not loaded');
+
+    setLoading(50, 'Loading your portfolio data...');
     const loaded = await window.__loadFromFirestore();
-    setLoading(70, 'Loading portfolio data...');
-    if(loaded){ DATA = loaded; }
-    firebaseAvailable = true;
-    setLoading(100, 'Ready!');
-  } catch(e){
+
+    if(loaded){
+      DATA = loaded;
+      firebaseAvailable = true;
+      setLoading(100, '✓ Data loaded from Firebase');
+      setFirebaseStatus(true);
+    } else {
+      // No data in Firestore yet — use defaults and save them
+      firebaseAvailable = true;
+      setLoading(80, 'First run — initializing Firebase with defaults...');
+      await window.__saveToFirestore(DATA);
+      setLoading(100, '✓ Firebase initialized with default data');
+      setFirebaseStatus(true);
+    }
+  } catch(e) {
     firebaseAvailable = false;
-    setLoading(100, 'Firebase not configured — using defaults');
-    console.warn('Firebase not configured:', e);
+    firebaseError = window.__firebaseError || e.message;
+    console.error('Firebase init failed:', firebaseError);
+
+    let hint = '';
+    if(firebaseError && firebaseError.includes('RULES')) {
+      hint = '⚠ Firestore rules are blocking access. Open Admin panel → Settings for fix instructions.';
+    } else if(firebaseError && firebaseError.includes('PROJECT')) {
+      hint = '⚠ Firestore database not created. Go to Firebase Console → Firestore Database → Create database.';
+    } else {
+      hint = '⚠ Firebase offline. Using local data. Open Admin → Settings for help.';
+    }
+
+    setLoading(100, 'Using default data (Firebase offline)', hint);
+    setFirebaseStatus(false, firebaseError);
   }
+
   setTimeout(()=>{
     renderAll();
     hideLoading();
@@ -670,38 +882,71 @@ async function initFirebase(){
     initTilt();
     initCanvas();
     initCursor();
-    setTimeout(()=>{ document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150)); },200);
-  }, 400);
+    applyLang();
+    setTimeout(()=>{
+      document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150));
+    }, 200);
+  }, 600);
 }
 
-// Wait for Firebase module to load
-if(window.__firebaseReady){
+function setFirebaseStatus(ok, err=''){
+  // Nav dot
+  const dot = document.getElementById('fbn-dot');
+  const txt = document.getElementById('fbn-text');
+  if(dot && txt){
+    dot.className = 'fbn-dot' + (ok?' connected':' error');
+    txt.textContent = ok ? 'Firebase ✓' : 'Firebase ✗';
+  }
+  // Admin badge
+  const badge = document.getElementById('fb-badge-text');
+  if(badge) badge.textContent = ok ? 'Firebase Live ✓' : 'Firebase Offline ✗';
+  // Admin alerts
+  const alert = document.getElementById('fb-alert');
+  const okEl = document.getElementById('fb-ok');
+  const errDisp = document.getElementById('fb-error-display');
+  if(errDisp) errDisp.textContent = err || 'None';
+  if(alert && okEl){
+    if(ok){
+      alert.classList.remove('show');
+      okEl.classList.add('show');
+    } else {
+      okEl.classList.remove('show');
+      alert.textContent = '⚠ Firebase connection failed. Changes will NOT be saved. Fix: Admin → Settings → Firebase Troubleshooting. Error: ' + err;
+      alert.classList.add('show');
+    }
+  }
+}
+
+// Wait for Firebase
+if(window.__firebaseReady !== undefined){
   initFirebase();
 } else {
-  window.addEventListener('firebase-ready', initFirebase);
-  // Fallback if Firebase module fails to load at all
+  window.addEventListener('firebase-ready', initFirebase, {once:true});
+  // Hard fallback
   setTimeout(()=>{
     if(!window.__firebaseReady){
-      console.warn('Firebase module did not load');
-      renderAll(); hideLoading(); initObserver(); initTilt(); initCanvas(); initCursor();
-      setTimeout(()=>{ document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150)); },200);
+      console.warn('Firebase timed out — proceeding with defaults');
+      firebaseError = 'Firebase module timed out (network issue or CDN blocked)';
+      setFirebaseStatus(false, firebaseError);
+      renderAll(); hideLoading(); initObserver(); initTilt(); initCanvas(); initCursor(); applyLang();
+      setTimeout(()=>{document.querySelectorAll('#hero .fade-up').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*150));},200);
     }
-  }, 5000);
+  }, 6000);
 }
 
-// ===================== SYNC UI =====================
+// ======================== SYNC UI ========================
 function showSync(state, msg){
   const ind = document.getElementById('sync-indicator');
   const dot = document.getElementById('sync-dot');
   const txt = document.getElementById('sync-text');
-  dot.className = 'sync-dot' + (state==='saving'?' saving':state==='error'?' error':'');
+  dot.className = 'sync-dot'+(state==='saving'?' saving':state==='error'?' error':'');
   txt.textContent = msg;
   ind.classList.add('show');
-  if(state==='synced') setTimeout(()=>ind.classList.remove('show'), 3000);
+  if(state==='synced') setTimeout(()=>ind.classList.remove('show'),3000);
 }
 
-// ===================== RENDER =====================
-function renderAll(){ renderHero(); renderAbout(); renderSkills(); renderExp(); renderEdu(); renderCourses(); renderCerts(); renderContact(); renderFooter(); document.title = DATA.settings.siteTitle; }
+// ======================== RENDER ========================
+function renderAll(){ renderHero(); renderAbout(); renderSkills(); renderExp(); renderEdu(); renderCourses(); renderCerts(); renderContact(); renderFooter(); document.title=DATA.settings.siteTitle; }
 
 function renderHero(){
   const h=DATA.hero;
@@ -720,7 +965,7 @@ function renderAbout(){
   document.getElementById('about-p1-el').textContent=a.p1;
   document.getElementById('about-p2-el').textContent=a.p2;
   const frame=document.getElementById('about-photo-frame');
-  const old=frame.querySelector('img.pk-photo'); if(old)old.remove();
+  const old=frame.querySelector('img.pk-photo'); if(old) old.remove();
   if(a.photo){ const img=document.createElement('img'); img.src=a.photo; img.className='pk-photo'; img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;'; frame.appendChild(img); }
   document.getElementById('about-info-grid').innerHTML=a.info.map(i=>`<div class="info-item"><div class="info-label">${i.label}</div><div class="info-val">${i.val}</div></div>`).join('');
 }
@@ -748,7 +993,6 @@ function renderContact(){
   const c=DATA.contact;
   document.getElementById('contact-heading-el').textContent=c.heading;
   document.getElementById('contact-desc-el').textContent=c.desc;
-  // mailto handled by sendEmail()
   document.getElementById('contact-links-el').innerHTML=`
     <a href="mailto:${c.email}" class="contact-link"><span>✉️</span><span>${c.email}</span><span class="contact-link-label">Email</span></a>
     <a href="tel:${c.phone}" class="contact-link"><span>📱</span><span>${c.phone}</span><span class="contact-link-label">Phone</span></a>
@@ -760,15 +1004,30 @@ function renderFooter(){
   document.getElementById('footer-right-el').innerHTML=DATA.settings.footerRight.replace('·','<span>·</span>');
 }
 
-// ===================== ADMIN =====================
+// ======================== ADMIN ========================
 function openLogin(){ document.getElementById('login-modal').classList.add('show'); setTimeout(()=>document.getElementById('login-pw').focus(),100); }
 function closeLogin(){ document.getElementById('login-modal').classList.remove('show'); document.getElementById('login-pw').value=''; document.getElementById('login-error').style.display='none'; }
-function doLogin(){ const pw=document.getElementById('login-pw').value; if(pw===DATA.password){ closeLogin(); openAdmin(); } else { document.getElementById('login-error').style.display='block'; document.getElementById('login-pw').value=''; document.getElementById('login-pw').focus(); } }
+function doLogin(){
+  const pw=document.getElementById('login-pw').value;
+  if(pw===DATA.password){ closeLogin(); openAdmin(); }
+  else { document.getElementById('login-error').style.display='block'; document.getElementById('login-pw').value=''; document.getElementById('login-pw').focus(); }
+}
 document.getElementById('login-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 
-function openAdmin(){ populateAdminFields(); document.getElementById('admin-overlay').classList.add('show'); document.body.style.overflow='hidden'; }
+function openAdmin(){
+  populateAdminFields();
+  // Refresh Firebase status in admin panel
+  setFirebaseStatus(firebaseAvailable, firebaseError || '');
+  document.getElementById('admin-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
 function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); document.body.style.overflow=''; }
-function switchTab(name){ const tabs=['hero','about','skills','experience','education','courses','certs','contact','settings']; document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name)); document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active')); document.getElementById('tab-'+name).classList.add('active'); }
+function switchTab(name){
+  const tabs=['hero','about','skills','experience','education','courses','certs','contact','settings'];
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
 
 function populateAdminFields(){
   const h=DATA.hero;
@@ -781,6 +1040,9 @@ function populateAdminFields(){
   renderSkillsAdmin(); renderExpAdmin(); renderEduAdmin(); renderCoursesAdmin(); renderCertsAdmin();
   const c=DATA.contact; sv('a-contact-heading',c.heading); sv('a-contact-desc',c.desc); sv('a-email',c.email); sv('a-phone',c.phone); sv('a-linkedin',c.linkedin); sv('a-github',c.github);
   const s=DATA.settings; sv('a-site-title',s.siteTitle); sv('a-footer-left',s.footerLeft); sv('a-footer-right',s.footerRight);
+  // Show current error in settings
+  const errDisp = document.getElementById('fb-error-display');
+  if(errDisp) errDisp.textContent = firebaseError || 'None';
 }
 
 function sv(id,val){ const e=document.getElementById(id); if(e) e.value=val||''; }
@@ -870,15 +1132,18 @@ function renderCertsAdmin(){
 function addCert(){ DATA.certs.push({icon:'🏅',name:'New Certificate',issuer:'',date:'',featured:false,sub:''}); renderCertsAdmin(); }
 function deleteCert(i){ DATA.certs.splice(i,1); renderCertsAdmin(); }
 
-// Photo
+// Photo upload
 function handlePhotoUpload(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{ DATA.about.photo=ev.target.result; const p=document.getElementById('photo-preview'); p.src=ev.target.result; p.style.display='block'; };
+  reader.onload=ev=>{
+    DATA.about.photo=ev.target.result;
+    const p=document.getElementById('photo-preview'); p.src=ev.target.result; p.style.display='block';
+  };
   reader.readAsDataURL(file);
 }
 
-// SAVE ALL
+// ======================== SAVE ALL ========================
 async function saveAll(){
   // Collect form values
   DATA.hero={firstName:gv('a-first-name'),lastName:gv('a-last-name'),statusTag:gv('a-status-tag'),desc:gv('a-hero-desc'),stats:Array.from({length:4},(_,i)=>({num:gv(`a-stat${i+1}-num`),label:gv(`a-stat${i+1}-label`)}))};
@@ -887,26 +1152,31 @@ async function saveAll(){
   DATA.contact={heading:gv('a-contact-heading'),desc:gv('a-contact-desc'),email:gv('a-email'),phone:gv('a-phone'),linkedin:gv('a-linkedin'),github:gv('a-github')};
   DATA.settings={siteTitle:gv('a-site-title'),footerLeft:gv('a-footer-left'),footerRight:gv('a-footer-right')};
 
-  // Save to Firebase
   const btn=document.getElementById('main-save-btn'); const btn2=document.getElementById('save-bar-btn');
   btn.disabled=true; btn2.disabled=true; btn.textContent='Saving...'; btn2.textContent='Saving...';
   showSync('saving','Saving to Firebase...');
 
-  let saved=false;
-  if(firebaseAvailable && window.__saveToFirestore){
-    saved = await window.__saveToFirestore(DATA);
+  if(!firebaseAvailable){
+    showToast('⚠ Firebase not connected — fix Firestore Rules first (Admin → Settings)', true);
+    btn.disabled=false; btn2.disabled=false; btn.textContent='Save to Firebase →'; btn2.textContent='Save to Firebase →';
+    showSync('error','Firebase offline');
+    renderAll();
+    return;
   }
 
+  const saved = await window.__saveToFirestore(DATA);
   btn.disabled=false; btn2.disabled=false; btn.textContent='Save to Firebase →'; btn2.textContent='Save to Firebase →';
 
   if(saved){
     showSync('synced','✓ Saved to Firebase');
-    document.getElementById('save-status').innerHTML='<span class="save-success">✓ Saved to Firebase at '+new Date().toLocaleTimeString()+' — visible worldwide</span>';
-    showToast('✓ Saved to Firebase! All visitors will see your changes.');
+    document.getElementById('save-status').innerHTML='<span class="save-success">✓ Saved at '+new Date().toLocaleTimeString()+' — visible worldwide</span>';
+    showToast('✓ Saved to Firebase! All visitors see your changes.');
   } else {
     showSync('error','Save failed');
-    document.getElementById('save-status').innerHTML='<span class="save-error">⚠ Firebase not configured — add your Firebase config to the HTML file</span>';
-    showToast('⚠ Firebase not set up. Paste your firebaseConfig in the HTML file.', true);
+    firebaseError = window.__firebaseError || 'Save failed';
+    setFirebaseStatus(false, firebaseError);
+    document.getElementById('save-status').innerHTML='<span class="save-error">⚠ Save failed — check Firestore Rules (Admin → Settings)</span>';
+    showToast('⚠ Save failed. See Admin → Settings → Firebase Troubleshooting', true);
   }
   renderAll();
 }
@@ -920,7 +1190,7 @@ async function changePassword(){
   DATA.password=nw;
   if(firebaseAvailable && window.__saveToFirestore) await window.__saveToFirestore(DATA);
   document.getElementById('a-pw-current').value=''; document.getElementById('a-pw-new').value='';
-  showToast('✓ Password updated in Firebase!');
+  showToast('✓ Password updated!');
 }
 
 // Export/Import/Reset
@@ -929,36 +1199,74 @@ function importData(e){ const f=e.target.files[0]; if(!f) return; const r=new Fi
 async function resetData(){ DATA=JSON.parse(JSON.stringify(DEFAULT_DATA)); if(firebaseAvailable && window.__saveToFirestore) await window.__saveToFirestore(DATA); populateAdminFields(); renderAll(); showToast('✓ Reset to defaults and saved.'); }
 
 // Toast
-function showToast(msg, isError=false){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(isError?' error-toast':''); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4000); }
+function showToast(msg, isError=false){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(isError?' error-toast':''); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4500); }
 
-// ===================== CANVAS BG =====================
+// ======================== CANVAS ========================
 function initCanvas(){
   const canvas=document.getElementById('bg-canvas'); const ctx=canvas.getContext('2d');
   function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
   resize(); window.addEventListener('resize',resize);
-  const pts=[]; for(let i=0;i<80;i++) pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,z:Math.random()*400+50,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,vz:(Math.random()-.5)*.5,size:Math.random()*2+.5,sx:0,sy:0});
+  const pts=[];
+  for(let i=0;i<80;i++) pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,z:Math.random()*400+50,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,vz:(Math.random()-.5)*.5,size:Math.random()*2+.5,sx:0,sy:0});
   let mx=window.innerWidth/2,my=window.innerHeight/2;
   document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    pts.forEach(p=>{ p.x+=p.vx+(mx-canvas.width/2)*.00005; p.y+=p.vy+(my-canvas.height/2)*.00005; p.z+=p.vz; if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0; if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0; if(p.z<50)p.z=450; if(p.z>450)p.z=50; const sc=300/p.z; p.sx=(p.x-canvas.width/2)*sc+canvas.width/2; p.sy=(p.y-canvas.height/2)*sc+canvas.height/2; const a=(1-p.z/500)*.8; ctx.beginPath(); ctx.arc(p.sx,p.sy,Math.max(.3,p.size*sc),0,Math.PI*2); ctx.fillStyle=`rgba(0,229,160,${a})`; ctx.fill(); });
-    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){ const a=pts[i],b=pts[j],dx=a.sx-b.sx,dy=a.sy-b.sy,d=Math.sqrt(dx*dx+dy*dy); if(d<100){ ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.strokeStyle=`rgba(0,229,160,${(1-d/100)*.12})`;ctx.lineWidth=.5;ctx.stroke(); } }
+    const isLight=document.documentElement.getAttribute('data-theme')==='light';
+    pts.forEach(p=>{
+      p.x+=p.vx+(mx-canvas.width/2)*.00005;
+      p.y+=p.vy+(my-canvas.height/2)*.00005;
+      p.z+=p.vz;
+      if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+      if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+      if(p.z<50)p.z=450; if(p.z>450)p.z=50;
+      const sc=300/p.z;
+      p.sx=(p.x-canvas.width/2)*sc+canvas.width/2;
+      p.sy=(p.y-canvas.height/2)*sc+canvas.height/2;
+      const a=(1-p.z/500)*(isLight?.9:.8);
+      const color=isLight?`rgba(100,50,200,${a})`:`rgba(0,229,160,${a})`;
+      ctx.beginPath(); ctx.arc(p.sx,p.sy,Math.max(.3,p.size*sc),0,Math.PI*2); ctx.fillStyle=color; ctx.fill();
+    });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const a=pts[i],b=pts[j],dx=a.sx-b.sx,dy=a.sy-b.sy,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<100){
+        const al=(1-d/100)*(isLight?.25:.1);
+        ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy);
+        ctx.strokeStyle=isLight?`rgba(100,50,200,${al})`:`rgba(0,229,160,${al})`;
+        ctx.lineWidth=.5; ctx.stroke();
+      }
+    }
     requestAnimationFrame(draw);
   }
   draw();
 }
 
-// ===================== CURSOR =====================
+// ======================== CURSOR ========================
 function initCursor(){
-  const c=document.getElementById('cursor'),r=document.getElementById('cursor-ring'); let mx=0,my=0,rx=0,ry=0;
-  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;c.style.left=mx+'px';c.style.top=my+'px';});
+  const c=document.getElementById('cursor'), r=document.getElementById('cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; c.style.left=mx+'px'; c.style.top=my+'px'; });
   function anim(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; r.style.left=rx+'px'; r.style.top=ry+'px'; requestAnimationFrame(anim); }
   anim();
-  document.addEventListener('mouseover',e=>{ if(e.target.closest('a,button,.skill-card,.cert-card')){ c.style.transform='translate(-50%,-50%) scale(2)'; r.style.opacity='1'; } });
-  document.addEventListener('mouseout',e=>{ if(e.target.closest('a,button,.skill-card,.cert-card')){ c.style.transform='translate(-50%,-50%) scale(1)'; r.style.opacity='.5'; } });
+  document.addEventListener('mouseover',e=>{
+    if(e.target.closest('a,button,.skill-card,.cert-card,.contact-link')){
+      c.style.transform='translate(-50%,-50%) scale(2.5)';
+      r.style.transform='translate(-50%,-50%) scale(1.4)';
+      r.style.opacity='0.9';
+    }
+  });
+  document.addEventListener('mouseout',e=>{
+    if(e.target.closest('a,button,.skill-card,.cert-card,.contact-link')){
+      c.style.transform='translate(-50%,-50%) scale(1)';
+      r.style.transform='translate(-50%,-50%) scale(1)';
+      r.style.opacity='0.6';
+    }
+  });
+  document.addEventListener('mousedown',()=>{ c.style.transform='translate(-50%,-50%) scale(0.7)'; });
+  document.addEventListener('mouseup',()=>{ c.style.transform='translate(-50%,-50%) scale(1)'; });
 }
 
-// ===================== OBSERVER & TILT =====================
+// ======================== OBSERVER & TILT ========================
 function initObserver(){
   const obs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }),{threshold:.1,rootMargin:'0px 0px -50px 0px'});
   document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
@@ -970,86 +1278,250 @@ function initTilt(){
   });
 }
 
-// ===================== CONTACT FORM =====================
-// EmailJS config — fill these in after creating account at emailjs.com
+// ======================== CONTACT FORM ========================
 const EMAILJS_SERVICE_ID  = "service_contact_Portfoli";
 const EMAILJS_TEMPLATE_ID = "template_5lfq54h";
-const RECIPIENT_EMAIL     = "pushpakoirala.work@gmail.com";
+const EMAILJS_NOTIFY_TEMPLATE_ID = "OPTIONAL";
 
 async function sendEmail(){
   const name    = document.getElementById('form-name').value.trim();
   const email   = document.getElementById('form-email').value.trim();
-  const subject = document.getElementById('form-subject').value.trim();
+  const subject = document.getElementById('form-subject').value.trim() || 'Portfolio Contact';
   const message = document.getElementById('form-message').value.trim();
-
-  // Basic validation
-  if(!name || !email || !message){
-    showToast('Please fill in name, email and message.', true);
-    return;
-  }
-  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!emailRe.test(email)){
-    showToast('Please enter a valid email address.', true);
-    return;
-  }
-
+  if(!name || !email || !message){ showToast('Please fill in name, email and message.', true); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showToast('Please enter a valid email address.', true); return; }
   const btn = document.getElementById('form-send-btn');
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
-  btn.style.opacity = '0.6';
-
-  const templateParams = {
-    from_name:    name,
-    from_email:   email,
-    subject:      subject || 'Portfolio Contact',
-    message:      message,
-    to_email:     RECIPIENT_EMAIL,
-    reply_to:     email,
-  };
-
+  btn.textContent = 'Sending...'; btn.disabled = true; btn.style.opacity = '0.6';
+  const templateParams = { name, title:subject, subject, message, from_email:email, from_name:name, reply_to:email, to_name:'Pushpa Koirala', to_email:'pushpakoirala.work@gmail.com' };
   try {
-    // If EmailJS is not configured yet, fall back to mailto
-    if(EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID'){
-      // Fallback: open mailto with prefilled content
-      const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`);
-      const sub  = encodeURIComponent(subject || 'Portfolio Contact');
-      window.location.href = `mailto:${RECIPIENT_EMAIL}?subject=${sub}&body=${body}`;
-      resetForm();
-      return;
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {...templateParams, to_email:email});
+    if(EMAILJS_NOTIFY_TEMPLATE_ID !== 'OPTIONAL'){
+      try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_NOTIFY_TEMPLATE_ID, {...templateParams, to_email:'pushpakoirala.work@gmail.com'}); } catch(e2){}
     }
-
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-    document.getElementById('form-success').style.display = 'block';
-    document.getElementById('form-error').style.display   = 'none';
-    document.getElementById('form-name').value    = '';
-    document.getElementById('form-email').value   = '';
-    document.getElementById('form-subject').value = '';
-    document.getElementById('form-message').value = '';
+    document.getElementById('form-success').style.display='block';
+    document.getElementById('form-error').style.display='none';
+    ['form-name','form-email','form-subject','form-message'].forEach(id=>document.getElementById(id).value='');
     showToast('✓ Message sent successfully!');
   } catch(err) {
-    console.error('EmailJS error:', err);
-    document.getElementById('form-error').style.display   = 'block';
-    document.getElementById('form-success').style.display = 'none';
-    showToast('Failed to send — see fallback link below.', true);
+    let hint='';
+    if(err&&err.status===412) hint=' (Template variable mismatch)';
+    if(err&&err.status===401) hint=' (Invalid public key)';
+    document.getElementById('form-error').style.display='block';
+    document.getElementById('form-error').innerHTML=`⚠ Failed to send${hint}. Email directly: <a href="mailto:pushpakoirala.work@gmail.com" style="color:var(--danger);">pushpakoirala.work@gmail.com</a>`;
+    document.getElementById('form-success').style.display='none';
+    showToast('Send failed'+hint, true);
   } finally {
-    btn.textContent = 'Send message →';
-    btn.disabled = false;
-    btn.style.opacity = '1';
+    btn.textContent='Send message →'; btn.disabled=false; btn.style.opacity='1';
   }
 }
 
-function resetForm(){
-  document.getElementById('form-name').value    = '';
-  document.getElementById('form-email').value   = '';
-  document.getElementById('form-subject').value = '';
-  document.getElementById('form-message').value = '';
-  document.getElementById('form-success').style.display = 'block';
-  document.getElementById('form-error').style.display   = 'none';
-  document.getElementById('form-send-btn').textContent  = 'Send message →';
-  document.getElementById('form-send-btn').disabled     = false;
-  document.getElementById('form-send-btn').style.opacity = '1';
+// ======================== THEME ========================
+const THEMES=['dark','light','system'];
+let themeIdx=0;
+const THEME_ICONS={dark:'🌙',light:'☀️',system:'💻'};
+function initTheme(){
+  const saved=localStorage.getItem('pk_theme')||'system';
+  themeIdx=THEMES.indexOf(saved); if(themeIdx<0) themeIdx=2;
+  applyTheme();
+}
+function cycleTheme(){ themeIdx=(themeIdx+1)%THEMES.length; localStorage.setItem('pk_theme',THEMES[themeIdx]); applyTheme(); }
+function applyTheme(){
+  const t=THEMES[themeIdx]; const btn=document.getElementById('theme-btn');
+  if(t==='system'){
+    const dark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    if(btn) btn.textContent=THEME_ICONS.system;
+  } else {
+    document.documentElement.setAttribute('data-theme',t);
+    if(btn) btn.textContent=THEME_ICONS[t];
+  }
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(THEMES[themeIdx]==='system') applyTheme(); });
+
+// ======================== LANGUAGE ========================
+const LANG = {
+  en:{
+    'nav.about':'About','nav.skills':'Skills','nav.exp':'Experience','nav.edu':'Education','nav.certs':'Certs','nav.contact':'Contact',
+    'hero.tag':'Available for opportunities',
+    'hero.desc':'Automation & Electrical Engineering student at JAMK. Building the intersection of robotics, AI, and industrial systems.',
+    'hero.cta1':'Get in touch →','hero.cta2':'View work',
+    's1':'01 / About','s2':'02 / Skills','s3':'03 / Experience','s4':'04 / Education',
+    's4b':'Academic Highlights','s5':'05 / Certifications','s6':'06 / Contact',
+    'about.subtitle':'Engineer. Builder. Problem-solver.',
+    'about.p1':"I'm an Automation & Electrical Engineering student at JAMK University of Applied Sciences with a strong foundation in electronics, AI, cybersecurity, and industrial robotics. Originally from Nepal, now building my future in Finland.",
+    'about.p2':'My journey spans hardware repair, industrial welding & fabrication, electrical installation, and now advanced automation — including PLC programming, machine vision, and deep learning.',
+    'contact.heading':'Open to opportunities',
+    'contact.desc':'Currently seeking professional training and full-time roles in automation engineering, robotics, or industrial AI. Based in Helsinki, open to Finland and remote opportunities.',
+    'form.name':'Your name','form.email':'Your email','form.subject':'Subject','form.msg':'Message','form.send':'Send message →',
+    'scroll':'Scroll to explore',
+    'chat.status':'Online','chat.placeholder':'Ask me anything...',
+    'chat.sugg1':'Who is Pushpa?','chat.sugg2':'Skills & tools','chat.sugg3':'Work experience','chat.sugg4':'Hire / contact',
+    'chat.greeting':"Hi there! 👋 I'm PK Assistant — I know everything about Pushpa. Ask about skills, experience, education, or how to get in touch!"
+  },
+  fi:{
+    'nav.about':'Tietoja','nav.skills':'Taidot','nav.exp':'Kokemus','nav.edu':'Koulutus','nav.certs':'Sertifikaatit','nav.contact':'Yhteystiedot',
+    'hero.tag':'Avoin työtarjouksille',
+    'hero.desc':'Automaatio- ja sähkötekniikan opiskelija JAMKissa. Rakennan robotiikan, tekoälyn ja teollisuuden risteyskohtaa.',
+    'hero.cta1':'Ota yhteyttä →','hero.cta2':'Katso töitä',
+    's1':'01 / Tietoja','s2':'02 / Taidot','s3':'03 / Kokemus','s4':'04 / Koulutus',
+    's4b':'Opintosuoritukset','s5':'05 / Sertifikaatit','s6':'06 / Yhteystiedot',
+    'about.subtitle':'Insinööri. Rakentaja. Ongelmanratkaisija.',
+    'about.p1':'Olen automaatio- ja sähkötekniikan opiskelija JAMKin ammattikorkeakoulussa. Minulla on vahva tausta elektroniikassa, tekoälyssä, kyberturvallisuudessa ja teollisuusrobotiikassa. Kotoisin Nepalista, nyt rakennan tulevaisuuttani Suomessa.',
+    'about.p2':'Matkani kattaa laitteistokorjauksen, teollisen hitsauksen ja metallitöiden, sähköasennukset sekä nyt kehittyneen automaation — mukaan lukien PLC-ohjelmointi, konenäkö ja syväoppiminen.',
+    'contact.heading':'Avoin työtarjouksille',
+    'contact.desc':'Etsin tällä hetkellä harjoittelupaikkaa tai kokopäiväistä työtä automaatiotekniikan, robotiikan tai teollisen tekoälyn alalla. Sijainti Helsinki, avoin myös etätyöhön.',
+    'form.name':'Nimesi','form.email':'Sähköpostisi','form.subject':'Aihe','form.msg':'Viesti','form.send':'Lähetä viesti →',
+    'scroll':'Vieritä tutkiaksesi',
+    'chat.status':'Paikalla','chat.placeholder':'Kysy mitä tahansa...',
+    'chat.sugg1':'Kuka on Pushpa?','chat.sugg2':'Taidot ja työkalut','chat.sugg3':'Työkokemus','chat.sugg4':'Palkkaa / yhteystiedot',
+    'chat.greeting':'Hei! 👋 Olen PK-assistentti — tiedän kaiken Pushpasta. Kysy taidoista, kokemuksesta, koulutuksesta tai yhteystiedoista!'
+  }
+};
+let currentLang=localStorage.getItem('pk_lang')||'en';
+
+function toggleLang(){ currentLang=currentLang==='en'?'fi':'en'; localStorage.setItem('pk_lang',currentLang); applyLang(); }
+function applyLang(){
+  const L=LANG[currentLang];
+  const btn=document.getElementById('lang-toggle'); if(btn) btn.textContent=currentLang.toUpperCase();
+  document.documentElement.lang=currentLang;
+  // data-i18n attributes
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(L[k]) el.textContent=L[k]; });
+  // data-i18n-text attributes
+  document.querySelectorAll('[data-i18n-text]').forEach(el=>{ const k=el.getAttribute('data-i18n-text'); if(L[k]) el.textContent=L[k]; });
+  // Hero special
+  const ht=document.getElementById('hero-tag-el'); if(ht) ht.textContent=L['hero.tag']||DATA.hero.statusTag;
+  const hd=document.getElementById('hero-desc-el'); if(hd) hd.textContent=L['hero.desc']||DATA.hero.desc;
+  // About
+  const as=document.getElementById('about-subtitle-el'); if(as) as.textContent=L['about.subtitle']||DATA.about.subtitle;
+  const ap1=document.getElementById('about-p1-el'); if(ap1) ap1.textContent=L['about.p1']||DATA.about.p1;
+  const ap2=document.getElementById('about-p2-el'); if(ap2) ap2.textContent=L['about.p2']||DATA.about.p2;
+  // Contact
+  const ch=document.getElementById('contact-heading-el'); if(ch) ch.textContent=L['contact.heading']||DATA.contact.heading;
+  const cd=document.getElementById('contact-desc-el'); if(cd) cd.textContent=L['contact.desc']||DATA.contact.desc;
+  // Courses label
+  const cl=document.getElementById('courses-label'); if(cl&&L['s4b']) cl.textContent=L['s4b'];
+  // Form labels
+  document.querySelectorAll('[data-i18n-text]').forEach(el=>{ const k=el.getAttribute('data-i18n-text'); if(L[k]) el.textContent=L[k]; });
+  // Chat
+  const suggs=document.querySelectorAll('.chat-sugg');
+  ['chat.sugg1','chat.sugg2','chat.sugg3','chat.sugg4'].forEach((k,i)=>{ if(suggs[i]&&L[k]) suggs[i].textContent=L[k]; });
+  const ci=document.getElementById('chat-input'); if(ci&&L['chat.placeholder']) ci.placeholder=L['chat.placeholder'];
+  const cs=document.getElementById('chat-status-text'); if(cs&&L['chat.status']) cs.textContent=L['chat.status'];
+  // Footer
+  const fl=document.getElementById('footer-left-el'); if(fl) fl.innerHTML=DATA.settings.footerLeft.replace('Pushpa Koirala','<span>Pushpa Koirala</span>');
+  const fr=document.getElementById('footer-right-el'); if(fr) fr.innerHTML=DATA.settings.footerRight.replace('·','<span>·</span>');
 }
 
+// ======================== /admin ROUTE ========================
+function checkAdminRoute(){
+  const path=window.location.pathname, hash=window.location.hash, search=window.location.search;
+  const isAdmin=path.endsWith('/admin')||path.includes('/admin?')||hash==='#/admin'||hash==='#admin'||new URLSearchParams(search).get('admin')==='1';
+  if(isAdmin){
+    window.history.replaceState({},document.title,path.replace(/\/admin\/?.*$/,'')||'/');
+    setTimeout(()=>openLogin(),700);
+  }
+}
+
+// ======================== CHATBOT ========================
+let chatOpen=false;
+const KB={
+  en:{
+    who:"I'm Pushpa Koirala 👋 — an Automation & Electrical Engineering student at JAMK University of Applied Sciences in Jyväskylä, Finland. Originally from Nepal, passionate about robotics, AI, and industrial automation.",
+    skills:"Core skills: ⚙️ Siemens TIA Portal & PLC programming, 🤖 Machine Vision (NI LabVIEW, Cognex In-Sight), 🧠 Deep Learning & Python, 🔌 Circuit design & AutoCAD, 🏭 MIG/TIG Welding & industrial fabrication, 💻 MATLAB/Simulink, Git, Linux.",
+    exp:"Work history: Hardware Technician at A3Z Electronics (Nepal, 2022–23), Welder & Technician at SupaNirman Engineering (Nepal, 2023–24) where I built industrial liquid-filling machines from scratch, and currently studying full-time at JAMK since Aug 2024.",
+    edu:"Bachelor's in Automation and Robotics at JAMK (2024–present), 118/240 credits completed. Best grades: Physics 1, 2 & 3 all scored 5/5, Basics of Programming 5/5. Previously ICT at Tribhuwan University, Nepal.",
+    certs:"Certificates: 🏗️ FrEE Building Automation (EU-funded, Jan 2026), ⚡ Electrical Safety SF6000, ☁️ Oracle Autonomous Database Cloud 2025, 🔐 AI & Cybersecurity (University of Turku), ⛏️ Mine Robotics, 🐍 Python, 🦺 Occupational Safety Card.",
+    hire:"Actively seeking training placements or full-time roles in automation, robotics, or industrial AI in Finland! 📧 pushpakoirala.work@gmail.com ☎️ +358 408 795 424 — or use the contact form on this page!",
+    contact:"Best way to reach Pushpa: 📧 pushpakoirala.work@gmail.com | ☎️ +358 408 795 424 | Use the contact form on this page!",
+    location:"Based in Helsinki, Finland 🇫🇮 — originally from Nepal 🇳🇵. Open to opportunities across Finland and remote roles.",
+    python:"Yes! Python is a key skill — used for automation, AI/ML, data analysis and scripting.",
+    plc:"Proficient in Siemens TIA Portal — PLC programming including program structures, parameters, data blocks, and Profibus DP. Used in real projects at JAMK.",
+    labview:"Yes — NI LabVIEW used for machine vision exercises: oil filter inspection, bottle inspection, and PCB component analysis using Cognex In-Sight.",
+    ai:"Deep Learning studied at JAMK (grade 3/5), AI & Cybersecurity at University of Turku, Machine Vision with Cognex, plus courses in Exploring AI and Getting Started with AI Development.",
+    welding:"Certified MIG/TIG welder — plasma cutting, jig/fixture setup, robotic welding maintenance, and structural fabrication at SupaNirman Engineering, Nepal.",
+    jamk:"JAMK University of Applied Sciences, Jyväskylä, Finland — Pushpa's Bachelor's in Automation and Robotics started August 2024.",
+    grade:"Top grades: Physics 1, 2 & 3 — all 5/5 (excellent!), Basics of Programming 5/5. Also solid in Automation (3/5) and Deep Learning (3/5).",
+    default:"Great question! Ask me about Pushpa's skills, work experience, education, certifications, or how to contact him. 😊"
+  },
+  fi:{
+    who:"Olen Pushpa Koirala 👋 — automaatio- ja sähkötekniikan opiskelija JAMKissa Jyväskylässä. Kotoisin Nepalista, intohimona robotiikka, tekoäly ja teollisuusautomaatio.",
+    skills:"Keskeisiä taitoja: ⚙️ Siemens TIA Portal & PLC, 🤖 Konenäkö (NI LabVIEW, Cognex), 🧠 Syväoppiminen & Python, 🔌 Piirisuunnittelu & AutoCAD, 🏭 MIG/TIG-hitsaus, 💻 MATLAB/Simulink, Git, Linux.",
+    exp:"Laitteistoteknikko A3Z Electronics (Nepal, 2022–23), hitsaaja SupaNirman Engineering (Nepal, 2023–24), opiskelija JAMKissa elokuusta 2024.",
+    edu:"Automaation ja robotiikan AMK-tutkinto JAMKissa (2024–), 118/240 op. Parhaat arvosanat: Fysiikka 5/5, Ohjelmointi 5/5.",
+    certs:"Sertifikaatit: 🏗️ FrEE Rakennusautomaatio, ⚡ Sähköturvallisuus SF6000, ☁️ Oracle Cloud 2025, 🔐 Tekoäly & kyberturvallisuus, ⛏️ Kaivosrobotiikka, 🐍 Python, 🦺 Työturvallisuuskortti.",
+    hire:"Etsin harjoittelupaikkaa tai työtä automaatiossa, robotiikassa tai tekoälyssä Suomessa! 📧 pushpakoirala.work@gmail.com ☎️ +358 408 795 424",
+    contact:"Yhteydenottomahdollisuudet: 📧 pushpakoirala.work@gmail.com | ☎️ +358 408 795 424 | Tai sivun yhteydenottolomake!",
+    location:"Asuu Helsingissä, Suomessa 🇫🇮 — kotoisin Nepalista 🇳🇵.",
+    python:"Kyllä! Python on keskeinen taito automaatiossa, tekoälyssä ja data-analyysissä.",
+    plc:"Siemens TIA Portal PLC-ohjelmointi — rakenteet, parametrit, datalohkot, Profibus DP. Käytetty JAMKin projekteissa.",
+    labview:"NI LabVIEW konenäköharjoituksissa: öljynsuodatin-, pullo- ja piirilevytarkistukset Cognex In-Sight -järjestelmällä.",
+    ai:"Syväoppiminen JAMKissa (3/5), tekoäly & kyberturvallisuus Turun yliopistossa, konenäkö Cognex-järjestelmällä.",
+    welding:"Sertifioitu MIG/TIG-hitsaaja — plasmaLeikkaus, robottihitsaus, teräsrakenteet SupaNirman Engineeringissä.",
+    jamk:"JAMK-ammattikorkeakoulu Jyväskylässä — automaation ja robotiikan tutkinto alkanut elokuussa 2024.",
+    grade:"Parhaat: Fysiikka 1, 2 & 3 — kaikki 5/5! Ohjelmoinnin perusteet 5/5.",
+    default:"Hyvä kysymys! Voin kertoa Pushpan taidoista, kokemuksesta, koulutuksesta tai yhteystiedoista. 😊"
+  }
+};
+
+function getBotResponse(input){
+  const t=input.toLowerCase().trim();
+  const L=KB[currentLang]||KB.en;
+  if(/who|pushpa|about|yourself|itse|kuka|mikä/.test(t)) return L.who;
+  if(/skill|tool|know|technolog|stack|taito|osaam/.test(t)) return L.skills;
+  if(/experi|work|job|employ|kokemus|työ|töissä|worked/.test(t)) return L.exp;
+  if(/edu|study|school|university|jamk|degree|course|koulutus|opiskele/.test(t)) return L.edu;
+  if(/cert|certif|sertif|badge|award/.test(t)) return L.certs;
+  if(/hire|recruit|availab|opportun|position|intern|harjoittelu|palkkaa|töihin/.test(t)) return L.hire;
+  if(/contact|email|phone|reach|yhteystied|sähköpost|puhelin/.test(t)) return L.contact;
+  if(/where|location|city|finland|helsinki|live|sijaint/.test(t)) return L.location;
+  if(/python/.test(t)) return L.python;
+  if(/plc|tia|siemens|profibus/.test(t)) return L.plc;
+  if(/labview|vision|cognex|konenäkö/.test(t)) return L.labview;
+  if(/ai|machine learn|deep learn|neural|tekoäly/.test(t)) return L.ai;
+  if(/weld|hitsau|mig|tig|plasma/.test(t)) return L.welding;
+  if(/jamk|jyväskylä/.test(t)) return L.jamk;
+  if(/grade|mark|score|arvosana|5\/5|tulos/.test(t)) return L.grade;
+  if(/^(hi|hello|hey|hei|moi|terve|moikka)/.test(t)) return currentLang==='fi'?'Hei! 👋 Miten voin auttaa? Kysy Pushpan taidoista, kokemuksesta tai yhteystiedoista.':'Hey! 👋 How can I help? Ask about Pushpa\'s skills, experience, or contact info.';
+  if(/thank|kiitos/.test(t)) return currentLang==='fi'?'Ole hyvä! 😊 Muuta kysyttävää?':'You\'re welcome! 😊 Anything else?';
+  return L.default;
+}
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chat-window').classList.toggle('open',chatOpen);
+  const msgs=document.getElementById('chat-messages');
+  if(chatOpen && msgs.children.length===0){
+    setTimeout(()=>{
+      const L=LANG[currentLang];
+      addBotMsg(L['chat.greeting']||"Hi! I'm PK Assistant. Ask me about Pushpa!");
+      document.getElementById('chat-suggestions').style.display='flex';
+    },300);
+  }
+  if(chatOpen) setTimeout(()=>document.getElementById('chat-input').focus(),400);
+}
+function sendSugg(btn){ document.getElementById('chat-suggestions').style.display='none'; sendChatMsg(btn.textContent); }
+function sendChat(){ const inp=document.getElementById('chat-input'); const t=inp.value.trim(); if(!t) return; inp.value=''; sendChatMsg(t); }
+function addUserMsg(text){ const d=document.createElement('div'); d.className='chat-msg user'; d.textContent=text; document.getElementById('chat-messages').appendChild(d); scrollChat(); }
+function addBotMsg(text,animate=false){
+  const d=document.createElement('div'); d.className='chat-msg bot';
+  if(animate){
+    d.textContent=''; document.getElementById('chat-messages').appendChild(d);
+    let i=0; const speed=Math.max(8,Math.min(20,1200/text.length));
+    const type=()=>{ if(i<text.length){ d.textContent+=text[i++]; scrollChat(); setTimeout(type,speed); } };
+    setTimeout(type,100);
+  } else { d.textContent=text; document.getElementById('chat-messages').appendChild(d); scrollChat(); }
+}
+function addTyping(){ const d=document.createElement('div'); d.className='chat-msg bot typing'; d.id='typing-indicator'; d.innerHTML='<div class="chat-typing-dots"><span></span><span></span><span></span></div>'; document.getElementById('chat-messages').appendChild(d); scrollChat(); }
+function removeTyping(){ const t=document.getElementById('typing-indicator'); if(t) t.remove(); }
+function scrollChat(){ const m=document.getElementById('chat-messages'); m.scrollTop=m.scrollHeight; }
+function sendChatMsg(text){
+  addUserMsg(text); addTyping();
+  setTimeout(()=>{ removeTyping(); addBotMsg(getBotResponse(text),true); }, 400+Math.random()*600);
+}
+
+// ======================== INIT ========================
+initTheme();
+checkAdminRoute();
 </script>
 </body>
 </html>
