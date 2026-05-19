@@ -652,7 +652,6 @@ footer{position:relative;z-index:1;padding:2.5rem 6rem;border-top:1px solid var(
     <!-- Firebase status dot in nav -->
     <div class="firebase-status-nav" id="fb-nav-status">
       <div class="fbn-dot" id="fbn-dot"></div>
-      <span id="fbn-text">Firebase</span>
     </div>
     <button class="ctrl-btn lang-btn" id="lang-toggle" onclick="toggleLang()" title="Toggle language">EN</button>
     <button class="ctrl-btn" id="theme-btn" onclick="cycleTheme()" title="Toggle theme">🌙</button>
@@ -895,7 +894,8 @@ function setFirebaseStatus(ok, err=''){
   const txt = document.getElementById('fbn-text');
   if(dot && txt){
     dot.className = 'fbn-dot' + (ok?' connected':' error');
-    txt.textContent = ok ? 'Firebase ✓' : 'Firebase ✗';
+    // Keep nav label neutral — remove checkmark symbols from home nav
+    txt.textContent = 'Firebase';
   }
   // Admin badge
   const badge = document.getElementById('fb-badge-text');
@@ -1415,7 +1415,8 @@ function applyLang(){
 // ======================== /admin ROUTE ========================
 function checkAdminRoute(){
   const path=window.location.pathname, hash=window.location.hash, search=window.location.search;
-  const isAdmin=path.endsWith('/admin')||path.includes('/admin?')||hash==='#/admin'||hash==='#admin'||new URLSearchParams(search).get('admin')==='1';
+  // Accept any pathname containing '/admin' (works for sub-paths and folders)
+  const isAdmin = path.includes('/admin') || hash==='#/admin' || hash==='#admin' || new URLSearchParams(search).get('admin')==='1';
   if(isAdmin){
     window.history.replaceState({},document.title,path.replace(/\/admin\/?.*$/,'')||'/');
     setTimeout(()=>openLogin(),700);
